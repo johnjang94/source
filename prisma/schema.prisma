@@ -18,6 +18,7 @@ model User {
 model ProjectIntake {
   id                 String   @id @default(uuid())
   clientUserId       String
+  email              String
   projectName        String
   timeInvestment     String
   budgetRange        String

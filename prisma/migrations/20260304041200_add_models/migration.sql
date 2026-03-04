@@ -1,4 +1,3 @@
--- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "role" TEXT NOT NULL,
@@ -8,7 +7,6 @@ CREATE TABLE "User" (
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "ProjectIntake" (
     "id" TEXT NOT NULL,
     "clientUserId" TEXT NOT NULL,
@@ -26,8 +24,5 @@ CREATE TABLE "ProjectIntake" (
     CONSTRAINT "ProjectIntake_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
 CREATE INDEX "ProjectIntake_clientUserId_createdAt_idx" ON "ProjectIntake"("clientUserId", "createdAt");
-
--- AddForeignKey
 ALTER TABLE "ProjectIntake" ADD CONSTRAINT "ProjectIntake_clientUserId_fkey" FOREIGN KEY ("clientUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -13,7 +13,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+  await app.listen(4000);
 }
 
 bootstrap().catch((err) => {

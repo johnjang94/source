@@ -4,11 +4,6 @@ export class CreateProjectIntakeDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  clientUserId!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
   projectName!: string;
 
   @IsString()

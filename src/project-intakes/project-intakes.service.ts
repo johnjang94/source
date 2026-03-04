@@ -1,15 +1,22 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import type { ProjectIntake } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectIntakeDto } from './dto/create-project-intake.dto';
+import { UpdateProjectIntakeDto } from './dto/update-project-intake.dto';
 
 @Injectable()
 export class ProjectIntakesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(): Promise<ProjectIntake[]> {
+  async listByUser(userId: string): Promise<ProjectIntake[]> {
     try {
       return await this.prisma.projectIntake.findMany({
+        where: { clientUserId: userId },
         orderBy: { createdAt: 'desc' },
       });
     } catch {
@@ -17,20 +24,85 @@ export class ProjectIntakesService {
     }
   }
 
-  async create(dto: CreateProjectIntakeDto): Promise<ProjectIntake> {
+  async findByIdForUser(id: string, userId: string): Promise<ProjectIntake> {
     try {
-      return await this.prisma.projectIntake.create({
+      const intake = await this.prisma.projectIntake.findFirst({
+        where: { id, clientUserId: userId },
+      });
+
+      if (!intake) throw new NotFoundException('Project intake not found');
+      return intake;
+    } catch (e) {
+      if (e instanceof NotFoundException) throw e;
+      throw new InternalServerErrorException('Failed to get project intake');
+    }
+  }
+
+  async createForUser(
+    dto: CreateProjectIntakeDto,
+    user: { id: string; email: string },
+  ) {
+    return this.prisma.projectIntake.create({
+      data: {
+        clientUserId: user.id,
+        email: user.email,
+        projectName: dto.projectName,
+        timeInvestment: dto.timeInvestment,
+        budgetRange: dto.budgetRange,
+        projectDescription: dto.projectDescription,
+        goals: dto.goals,
+      },
+    });
+  }
+
+  async updateForUser(
+    id: string,
+    userId: string,
+    dto: UpdateProjectIntakeDto,
+  ): Promise<ProjectIntake> {
+    const hasAnyField =
+      dto.projectName !== undefined ||
+      dto.timeInvestment !== undefined ||
+      dto.budgetRange !== undefined ||
+      dto.projectDescription !== undefined ||
+      dto.goals !== undefined;
+
+    if (!hasAnyField) {
+      throw new BadRequestException('No fields to update');
+    }
+
+    try {
+      const existing = await this.prisma.projectIntake.findFirst({
+        where: { id, clientUserId: userId },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException('Project intake not found');
+      }
+
+      return await this.prisma.projectIntake.update({
+        where: { id },
         data: {
-          clientUserId: dto.clientUserId,
-          projectName: dto.projectName,
-          timeInvestment: dto.timeInvestment,
-          budgetRange: dto.budgetRange,
-          projectDescription: dto.projectDescription,
-          goals: dto.goals,
+          ...(dto.projectName !== undefined
+            ? { projectName: dto.projectName }
+            : {}),
+          ...(dto.timeInvestment !== undefined
+            ? { timeInvestment: dto.timeInvestment }
+            : {}),
+          ...(dto.budgetRange !== undefined
+            ? { budgetRange: dto.budgetRange }
+            : {}),
+          ...(dto.projectDescription !== undefined
+            ? { projectDescription: dto.projectDescription }
+            : {}),
+          ...(dto.goals !== undefined ? { goals: dto.goals } : {}),
         },
       });
-    } catch {
-      throw new InternalServerErrorException('Failed to create project intake');
+    } catch (e) {
+      if (e instanceof NotFoundException) throw e;
+      if (e instanceof BadRequestException) throw e;
+      throw new InternalServerErrorException('Failed to update project intake');
     }
   }
 }
