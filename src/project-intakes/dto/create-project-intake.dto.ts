@@ -1,28 +1,28 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateProjectIntakeDto {
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
-  projectName!: string;
+  clientUserId: string;
 
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
-  timeInvestment!: string;
+  projectName: string;
 
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
-  budgetRange!: string;
+  timeInvestment: string;
 
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(5000)
-  projectDescription!: string;
+  budgetRange: string;
 
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(5000)
-  goals!: string;
+  projectDescription: string;
+
+  @IsString()
+  goals: string;
+
+  @IsString()
+  thumbnailUrl: string;
+
+  @IsOptional()
+  @IsString()
+  mp4Url?: string | null;
 }

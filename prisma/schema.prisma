@@ -8,24 +8,54 @@ datasource db {
 }
 
 model User {
-  id        String          @id @default(uuid())
-  email     String          @unique
-  createdAt DateTime        @default(now())
+  id          String   @id
+  email       String   @unique
+  firstName   String?
+  lastName    String?
+  companyName String?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
 
   projectIntakes ProjectIntake[]
+  projects       Project[]
 }
 
 model ProjectIntake {
-  id                 String   @id @default(uuid())
+  id                 String   @id @default(cuid())
   clientUserId       String
-  email              String
   projectName        String
   timeInvestment     String
   budgetRange        String
   projectDescription String
   goals              String
+  thumbnailUrl       String?
+  mp4Url             String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  client User @relation(fields: [clientUserId], references: [id])
+  client  User     @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
+  project Project?
+
+  @@index([clientUserId])
+}
+
+model Project {
+  id                 String   @id @default(cuid())
+  clientUserId       String
+  intakeId           String?  @unique
+  projectName        String
+  timeInvestment     String
+  budgetRange        String
+  projectDescription String
+  goals              String
+  thumbnailUrl       String?
+  mp4Url             String?
+  status             String   @default("draft")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  client User           @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
+  intake ProjectIntake? @relation(fields: [intakeId], references: [id], onDelete: SetNull)
+
+  @@index([clientUserId])
 }

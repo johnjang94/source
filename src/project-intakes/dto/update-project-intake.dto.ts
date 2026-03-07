@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class UpdateProjectIntakeDto {
   @IsOptional()
@@ -25,4 +25,16 @@ export class UpdateProjectIntakeDto {
   @IsString()
   @MaxLength(5000)
   goals?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsUrl()
+  @MaxLength(2000)
+  thumbnailUrl?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @IsUrl()
+  @MaxLength(2000)
+  mp4Url?: string | null;
 }
