@@ -37,4 +37,9 @@ export class UpdateProjectIntakeDto {
   @IsUrl()
   @MaxLength(2000)
   mp4Url?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  status?: string;
 }
