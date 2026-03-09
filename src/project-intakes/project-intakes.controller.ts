@@ -34,7 +34,8 @@ export class ProjectIntakesController {
   @Post()
   async create(@Body() dto: CreateProjectIntakeDto, @Req() req: any) {
     const userId = req.user.id;
-    return this.projectIntakesService.createForUser(userId, dto);
+    const email = req.user.email;
+    return this.projectIntakesService.createForUser(userId, email, dto);
   }
 
   @Patch(':id')
