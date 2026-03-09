@@ -14,6 +14,7 @@ model User {
   lastName            String?
   companyName         String?
   avatarUrl           String?
+  companyLogoUrl      String? 
   projectIntakes      ProjectIntake[]
   projectApplications ProjectApplication[]
   projects            Project[]

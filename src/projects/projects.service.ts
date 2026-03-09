@@ -14,6 +14,7 @@ const clientUserSelect = {
     lastName: true,
     companyName: true,
     avatarUrl: true,
+    companyLogoUrl: true,
   },
 };
 
