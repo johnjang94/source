@@ -98,4 +98,22 @@ export class ProjectIntakesService {
       data,
     });
   }
+
+  async deleteForUser(id: string, userId: string) {
+    const existing = await this.prisma.projectIntake.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Project intake not found.');
+    }
+
+    if (existing.clientUserId !== userId) {
+      throw new ForbiddenException('You cannot delete this project intake.');
+    }
+
+    return this.prisma.projectIntake.delete({
+      where: { id },
+    });
+  }
 }

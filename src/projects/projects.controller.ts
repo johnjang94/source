@@ -16,9 +16,10 @@ import { UpdateProjectDto } from './update-project.dto';
 export class ProjectsController {
   constructor(private readonly service: ProjectsService) {}
 
+  @UseGuards(SupabaseAuthGuard)
   @Get('public')
-  async findPublic() {
-    const items = await this.service.findPublic();
+  async findPublic(@AuthUser() user: { id: string }) {
+    const items = await this.service.findPublic(user.id);
     return { ok: true, items };
   }
 
@@ -30,15 +31,18 @@ export class ProjectsController {
 
   @UseGuards(SupabaseAuthGuard)
   @Get('list')
-  async findParticipantList() {
-    const items = await this.service.findParticipantList();
+  async findParticipantList(@AuthUser() user: { id: string }) {
+    const items = await this.service.findParticipantList(user.id);
     return { ok: true, items };
   }
 
   @UseGuards(SupabaseAuthGuard)
   @Get('list/:id')
-  async findParticipantListById(@Param('id') id: string) {
-    const item = await this.service.findParticipantListById(id);
+  async findParticipantListById(
+    @Param('id') id: string,
+    @AuthUser() user: { id: string },
+  ) {
+    const item = await this.service.findParticipantListById(id, user.id);
     return { ok: true, item };
   }
 

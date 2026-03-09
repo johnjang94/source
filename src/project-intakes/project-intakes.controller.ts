@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -73,5 +74,14 @@ export class ProjectIntakesController {
   ): Promise<UpdateProjectIntakeResponse> {
     const intake = await this.service.updateForUser(id, user.id, dto);
     return { ok: true, intake };
+  }
+
+  @Delete(':id')
+  async remove(
+    @Param('id') id: string,
+    @AuthUser() user: { id: string },
+  ): Promise<{ ok: true }> {
+    await this.service.deleteForUser(id, user.id);
+    return { ok: true };
   }
 }

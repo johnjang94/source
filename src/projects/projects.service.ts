@@ -21,8 +21,30 @@ export class ProjectsService {
     });
   }
 
-  async findPublic() {
+  async findPublic(userId?: string) {
+    let excludedProjectIds: string[] = [];
+
+    if (userId) {
+      const applications = await this.prisma.projectApplication.findMany({
+        where: {
+          userId,
+        },
+        select: {
+          projectId: true,
+        },
+      });
+
+      excludedProjectIds = applications.map((item) => item.projectId);
+    }
+
     return this.prisma.project.findMany({
+      where: {
+        ...(excludedProjectIds.length > 0 && {
+          id: {
+            notIn: excludedProjectIds,
+          },
+        }),
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -83,8 +105,31 @@ export class ProjectsService {
     return project;
   }
 
-  async findParticipantList() {
+  async findParticipantList(userId: string) {
+    const applications = await this.prisma.projectApplication.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        projectId: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const projectIds = applications.map((item) => item.projectId);
+
+    if (projectIds.length === 0) {
+      return [];
+    }
+
     return this.prisma.project.findMany({
+      where: {
+        id: {
+          in: projectIds,
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -111,7 +156,18 @@ export class ProjectsService {
     });
   }
 
-  async findParticipantListById(id: string) {
+  async findParticipantListById(id: string, userId: string) {
+    const application = await this.prisma.projectApplication.findFirst({
+      where: {
+        projectId: id,
+        userId,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Applied project not found.');
+    }
+
     const project = await this.prisma.project.findFirst({
       where: {
         id,
