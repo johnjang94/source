@@ -49,18 +49,37 @@ export class ProjectIntakesService {
       update: {},
     });
 
-    return this.prisma.projectIntake.create({
-      data: {
-        clientUserId: userId,
-        projectName: dto.projectName,
-        budgetRange: dto.budgetRange,
-        timeInvestment: dto.timeInvestment,
-        projectDescription: dto.projectDescription,
-        goals: dto.goals,
-        thumbnailUrl: dto.thumbnailUrl ?? null,
-        mp4Url: dto.mp4Url ?? null,
-        status: dto.status ?? 'submitted',
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const intake = await tx.projectIntake.create({
+        data: {
+          clientUserId: userId,
+          projectName: dto.projectName,
+          budgetRange: dto.budgetRange,
+          timeInvestment: dto.timeInvestment,
+          projectDescription: dto.projectDescription,
+          goals: dto.goals,
+          thumbnailUrl: dto.thumbnailUrl ?? null,
+          mp4Url: dto.mp4Url ?? null,
+          status: 'submitted',
+        },
+      });
+
+      await tx.project.create({
+        data: {
+          intakeId: intake.id,
+          clientUserId: userId,
+          projectName: dto.projectName,
+          budgetRange: dto.budgetRange,
+          timeInvestment: dto.timeInvestment,
+          projectDescription: dto.projectDescription,
+          goals: dto.goals,
+          thumbnailUrl: dto.thumbnailUrl ?? null,
+          mp4Url: dto.mp4Url ?? null,
+          status: 'open',
+        },
+      });
+
+      return intake;
     });
   }
 
