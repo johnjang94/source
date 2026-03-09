@@ -17,8 +17,8 @@ export class ProjectsController {
   constructor(private readonly service: ProjectsService) {}
 
   @Get('public')
-  async findPublic(@AuthUser() user: { id: string }) {
-    const items = await this.service.findPublic(user.id);
+  async findPublic(@AuthUser() user?: { id: string }) {
+    const items = await this.service.findPublic(user?.id);
     return { ok: true, items };
   }
 
