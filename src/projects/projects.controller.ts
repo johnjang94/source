@@ -16,7 +16,6 @@ import { UpdateProjectDto } from './update-project.dto';
 export class ProjectsController {
   constructor(private readonly service: ProjectsService) {}
 
-  @UseGuards(SupabaseAuthGuard)
   @Get('public')
   async findPublic(@AuthUser() user: { id: string }) {
     const items = await this.service.findPublic(user.id);
