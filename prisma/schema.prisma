@@ -8,17 +8,16 @@ datasource db {
 }
 
 model User {
-  id          String   @id
-  email       String   @unique
-  firstName   String?
-  lastName    String?
-  companyName String?
-  avatarUrl   String?
-  createdAt   DateTime @default(now())
-
-  projectIntakes      ProjectIntake[]
+  id                  String               @id
+  createdAt           DateTime             @default(now())
+  email               String               @unique
+  avatarUrl           String?
+  companyName         String?
+  firstName           String?
+  lastName            String?
   projects            Project[]
   projectApplications ProjectApplication[]
+  projectIntakes      ProjectIntake[]
 }
 
 model ProjectIntake {
@@ -29,21 +28,20 @@ model ProjectIntake {
   budgetRange        String
   projectDescription String
   goals              String
-  thumbnailUrl       String?
-  mp4Url             String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
-
-  client  User     @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
-  project Project?
+  mp4Url             String?
+  thumbnailUrl       String?
+  projects           Project?
+  client             User     @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
 
   @@index([clientUserId])
 }
 
 model Project {
-  id                 String   @id @default(cuid())
+  id                 String               @id @default(cuid())
   clientUserId       String
-  intakeId           String?  @unique
+  intakeId           String?              @unique
   projectName        String
   timeInvestment     String
   budgetRange        String
@@ -51,13 +49,12 @@ model Project {
   goals              String
   thumbnailUrl       String?
   mp4Url             String?
-  status             String   @default("draft")
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  client       User                 @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
-  intake       ProjectIntake?       @relation(fields: [intakeId], references: [id], onDelete: SetNull)
-  applications ProjectApplication[]
+  status             String               @default("draft")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  client             User                 @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
+  intake             ProjectIntake?       @relation(fields: [intakeId], references: [id])
+  applications       ProjectApplication[]
 
   @@index([clientUserId])
 }
@@ -67,9 +64,8 @@ model ProjectApplication {
   projectId String
   userId    String
   createdAt DateTime @default(now())
-
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, userId])
   @@index([projectId])

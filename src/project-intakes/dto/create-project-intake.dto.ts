@@ -2,9 +2,6 @@ import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class CreateProjectIntakeDto {
   @IsString()
-  clientUserId: string;
-
-  @IsString()
   @MaxLength(200)
   projectName: string;
 
