@@ -4,6 +4,7 @@ export enum UploadKind {
   PROFILE_AVATAR = 'profile-avatar',
   PROJECT_THUMBNAIL = 'project-thumbnail',
   PROJECT_MP4 = 'project-mp4',
+  COMPANY_LOGO = 'company-logo',
 }
 
 export class CreateUploadUrlDto {

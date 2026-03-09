@@ -38,6 +38,13 @@ export class UploadsService {
           folder: 'projects/videos',
         };
 
+      case UploadKind.COMPANY_LOGO:
+        return {
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+          maxBytes: 5 * 1024 * 1024,
+          folder: 'profiles/logos',
+        };
+
       default:
         throw new BadRequestException('Unsupported upload kind.');
     }
