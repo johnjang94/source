@@ -6,6 +6,31 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProjectDto } from './update-project.dto';
 
+const clientUserSelect = {
+  select: {
+    id: true,
+    email: true,
+    firstName: true,
+    lastName: true,
+    companyName: true,
+    avatarUrl: true,
+  },
+};
+
+const projectPublicSelect = {
+  id: true,
+  projectName: true,
+  budgetRange: true,
+  timeInvestment: true,
+  projectDescription: true,
+  goals: true,
+  thumbnailUrl: true,
+  mp4Url: true,
+  status: true,
+  createdAt: true,
+  clientUser: clientUserSelect,
+};
+
 @Injectable()
 export class ProjectsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -26,76 +51,27 @@ export class ProjectsService {
 
     if (userId) {
       const applications = await this.prisma.projectApplication.findMany({
-        where: {
-          userId,
-        },
-        select: {
-          projectId: true,
-        },
+        where: { userId },
+        select: { projectId: true },
       });
-
       excludedProjectIds = applications.map((item) => item.projectId);
     }
 
     return this.prisma.project.findMany({
       where: {
         ...(excludedProjectIds.length > 0 && {
-          id: {
-            notIn: excludedProjectIds,
-          },
+          id: { notIn: excludedProjectIds },
         }),
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        id: true,
-        projectName: true,
-        budgetRange: true,
-        timeInvestment: true,
-        projectDescription: true,
-        goals: true,
-        thumbnailUrl: true,
-        mp4Url: true,
-        createdAt: true,
-        status: true,
-        client: {
-          select: {
-            companyName: true,
-            avatarUrl: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
+      orderBy: { createdAt: 'desc' },
+      select: projectPublicSelect,
     });
   }
 
   async findPublicById(id: string) {
     const project = await this.prisma.project.findFirst({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        projectName: true,
-        budgetRange: true,
-        timeInvestment: true,
-        projectDescription: true,
-        goals: true,
-        thumbnailUrl: true,
-        mp4Url: true,
-        createdAt: true,
-        status: true,
-        client: {
-          select: {
-            companyName: true,
-            avatarUrl: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
+      where: { id },
+      select: projectPublicSelect,
     });
 
     if (!project) {
@@ -107,15 +83,9 @@ export class ProjectsService {
 
   async findParticipantList(userId: string) {
     const applications = await this.prisma.projectApplication.findMany({
-      where: {
-        userId,
-      },
-      select: {
-        projectId: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { userId },
+      select: { projectId: true },
+      orderBy: { createdAt: 'desc' },
     });
 
     const projectIds = applications.map((item) => item.projectId);
@@ -125,43 +95,15 @@ export class ProjectsService {
     }
 
     return this.prisma.project.findMany({
-      where: {
-        id: {
-          in: projectIds,
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        id: true,
-        projectName: true,
-        budgetRange: true,
-        timeInvestment: true,
-        projectDescription: true,
-        goals: true,
-        thumbnailUrl: true,
-        mp4Url: true,
-        createdAt: true,
-        status: true,
-        client: {
-          select: {
-            companyName: true,
-            avatarUrl: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
+      where: { id: { in: projectIds } },
+      orderBy: { createdAt: 'desc' },
+      select: projectPublicSelect,
     });
   }
 
   async findParticipantListById(id: string, userId: string) {
     const application = await this.prisma.projectApplication.findFirst({
-      where: {
-        projectId: id,
-        userId,
-      },
+      where: { projectId: id, userId },
     });
 
     if (!application) {
@@ -169,29 +111,8 @@ export class ProjectsService {
     }
 
     const project = await this.prisma.project.findFirst({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        projectName: true,
-        budgetRange: true,
-        timeInvestment: true,
-        projectDescription: true,
-        goals: true,
-        thumbnailUrl: true,
-        mp4Url: true,
-        createdAt: true,
-        status: true,
-        client: {
-          select: {
-            companyName: true,
-            avatarUrl: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
+      where: { id },
+      select: projectPublicSelect,
     });
 
     if (!project) {

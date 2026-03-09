@@ -1,69 +1,51 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
-  Post,
-  Body,
   Patch,
+  Post,
   Req,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { ProjectIntakesService } from './project-intakes.service';
 import { CreateProjectIntakeDto } from './dto/create-project-intake.dto';
 import { UpdateProjectIntakeDto } from './dto/update-project-intake.dto';
 
-type AuthenticatedRequest = Request & {
-  user: {
-    id: string;
-  };
-};
-
-@Controller('my/project-intakes')
+@Controller('project-intakes')
 export class ProjectIntakesController {
   constructor(private readonly projectIntakesService: ProjectIntakesService) {}
 
   @Get()
-  async listMine(@Req() req: AuthenticatedRequest) {
+  async listMine(@Req() req: any) {
     const userId = req.user.id;
-    const items = await this.projectIntakesService.listByUser(userId);
-    return { ok: true, items };
+    return this.projectIntakesService.listByUser(userId);
   }
 
   @Get(':id')
-  async getMine(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  async getMine(@Param('id') id: string, @Req() req: any) {
     const userId = req.user.id;
-    const intake = await this.projectIntakesService.findByIdForUser(id, userId);
-    return { ok: true, intake };
+    return this.projectIntakesService.findByIdForUser(id, userId);
   }
 
   @Post()
-  async createMine(
-    @Body() dto: CreateProjectIntakeDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
+  async create(@Body() dto: CreateProjectIntakeDto, @Req() req: any) {
     const userId = req.user.id;
-    const intake = await this.projectIntakesService.createForUser(dto, userId);
-    return { ok: true, intake };
+    return this.projectIntakesService.createForUser(userId, dto);
   }
 
   @Patch(':id')
-  async updateMine(
+  async update(
     @Param('id') id: string,
     @Body() dto: UpdateProjectIntakeDto,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
   ) {
     const userId = req.user.id;
-    const intake = await this.projectIntakesService.updateForUser(
-      id,
-      dto,
-      userId,
-    );
-    return { ok: true, intake };
+    return this.projectIntakesService.updateForUser(id, userId, dto);
   }
 
   @Delete(':id')
-  async deleteMine(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  async remove(@Param('id') id: string, @Req() req: any) {
     const userId = req.user.id;
     return this.projectIntakesService.deleteForUser(id, userId);
   }

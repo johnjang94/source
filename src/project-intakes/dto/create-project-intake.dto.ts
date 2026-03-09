@@ -1,40 +1,31 @@
-import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class CreateProjectIntakeDto {
   @IsString()
-  @MaxLength(200)
   projectName: string;
 
   @IsString()
-  @MaxLength(200)
-  timeInvestment: string;
-
-  @IsString()
-  @MaxLength(200)
   budgetRange: string;
 
   @IsString()
-  @MaxLength(5000)
+  timeInvestment: string;
+
+  @IsString()
   projectDescription: string;
 
   @IsString()
-  @MaxLength(5000)
   goals: string;
 
   @IsOptional()
   @IsString()
-  @IsUrl()
-  @MaxLength(2000)
-  thumbnailUrl?: string | null;
+  thumbnailUrl?: string;
 
   @IsOptional()
   @IsString()
-  @IsUrl()
-  @MaxLength(2000)
-  mp4Url?: string | null;
+  mp4Url?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(100)
+  @IsIn(['draft', 'submitted', 'reviewing', 'approved', 'rejected'])
   status?: string;
 }

@@ -8,52 +8,57 @@ datasource db {
 }
 
 model User {
-  id                  String               @id
-  createdAt           DateTime             @default(now())
+  id                  String               @id @default(cuid())
   email               String               @unique
-  avatarUrl           String?
-  companyName         String?
   firstName           String?
   lastName            String?
-  projects            Project[]
-  projectApplications ProjectApplication[]
+  companyName         String?
+  avatarUrl           String?
   projectIntakes      ProjectIntake[]
+  projectApplications ProjectApplication[]
+  projects            Project[]
+
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 }
 
 model ProjectIntake {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   clientUserId       String
   projectName        String
-  timeInvestment     String
   budgetRange        String
+  timeInvestment     String
   projectDescription String
   goals              String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  mp4Url             String?
   thumbnailUrl       String?
-  projects           Project?
-  client             User     @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
+  mp4Url             String?
+  status             String    @default("submitted")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  clientUser         User      @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
+  project            Project?
 
   @@index([clientUserId])
 }
 
 model Project {
   id                 String               @id @default(cuid())
+  intakeId           String               @unique
   clientUserId       String
-  intakeId           String?              @unique
   projectName        String
-  timeInvestment     String
   budgetRange        String
+  timeInvestment     String
   projectDescription String
   goals              String
   thumbnailUrl       String?
   mp4Url             String?
-  status             String               @default("draft")
+  status             String               @default("submitted")
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-  client             User                 @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
-  intake             ProjectIntake?       @relation(fields: [intakeId], references: [id])
+
+  intake             ProjectIntake        @relation(fields: [intakeId], references: [id], onDelete: Cascade)
+  clientUser         User                 @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
   applications       ProjectApplication[]
 
   @@index([clientUserId])
@@ -64,6 +69,8 @@ model ProjectApplication {
   projectId String
   userId    String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
