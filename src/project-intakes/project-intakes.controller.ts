@@ -7,11 +7,14 @@ import {
   Patch,
   Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ProjectIntakesService } from './project-intakes.service';
 import { CreateProjectIntakeDto } from './dto/create-project-intake.dto';
 import { UpdateProjectIntakeDto } from './dto/update-project-intake.dto';
+import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 
+@UseGuards(SupabaseAuthGuard)
 @Controller('project-intakes')
 export class ProjectIntakesController {
   constructor(private readonly projectIntakesService: ProjectIntakesService) {}
