@@ -38,17 +38,7 @@ export class ProjectIntakesService {
     return intake;
   }
 
-  async createForUser(
-    userId: string,
-    email: string,
-    dto: CreateProjectIntakeDto,
-  ) {
-    await this.prisma.user.upsert({
-      where: { id: userId },
-      create: { id: userId, email },
-      update: {},
-    });
-
+  async createForUser(userId: string, dto: CreateProjectIntakeDto) {
     return this.prisma.$transaction(async (tx) => {
       const intake = await tx.projectIntake.create({
         data: {
