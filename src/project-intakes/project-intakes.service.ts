@@ -54,12 +54,13 @@ export class ProjectIntakesService {
         data: {
           clientUserId: userId,
           projectName: dto.projectName,
-          budgetRange: dto.budgetRange,
-          timeInvestment: dto.timeInvestment,
           projectDescription: dto.projectDescription,
-          goals: dto.goals,
+          expectedOutcome: dto.expectedOutcome,
+          budgetAllowance: dto.budgetAllowance,
+          projectDeadline: new Date(dto.projectDeadline),
           thumbnailUrl: dto.thumbnailUrl ?? null,
-          mp4Url: dto.mp4Url ?? null,
+          videoUrl: dto.videoUrl ?? null,
+          submissionType: dto.submissionType ?? 'guided',
           status: 'submitted',
         },
       });
@@ -69,12 +70,13 @@ export class ProjectIntakesService {
           intakeId: intake.id,
           clientUserId: userId,
           projectName: dto.projectName,
-          budgetRange: dto.budgetRange,
-          timeInvestment: dto.timeInvestment,
           projectDescription: dto.projectDescription,
-          goals: dto.goals,
+          expectedOutcome: dto.expectedOutcome,
+          budgetAllowance: dto.budgetAllowance,
+          projectDeadline: new Date(dto.projectDeadline),
           thumbnailUrl: dto.thumbnailUrl ?? null,
-          mp4Url: dto.mp4Url ?? null,
+          videoUrl: dto.videoUrl ?? null,
+          submissionType: dto.submissionType ?? 'guided',
           status: 'open',
         },
       });
@@ -99,24 +101,27 @@ export class ProjectIntakesService {
     return this.prisma.projectIntake.update({
       where: { id },
       data: {
-        ...(dto.projectName !== undefined
-          ? { projectName: dto.projectName }
-          : {}),
-        ...(dto.budgetRange !== undefined
-          ? { budgetRange: dto.budgetRange }
-          : {}),
-        ...(dto.timeInvestment !== undefined
-          ? { timeInvestment: dto.timeInvestment }
-          : {}),
-        ...(dto.projectDescription !== undefined
-          ? { projectDescription: dto.projectDescription }
-          : {}),
-        ...(dto.goals !== undefined ? { goals: dto.goals } : {}),
-        ...(dto.thumbnailUrl !== undefined
-          ? { thumbnailUrl: dto.thumbnailUrl }
-          : {}),
-        ...(dto.mp4Url !== undefined ? { mp4Url: dto.mp4Url } : {}),
-        ...(dto.status !== undefined ? { status: dto.status } : {}),
+        ...(dto.projectName !== undefined && { projectName: dto.projectName }),
+        ...(dto.projectDescription !== undefined && {
+          projectDescription: dto.projectDescription,
+        }),
+        ...(dto.expectedOutcome !== undefined && {
+          expectedOutcome: dto.expectedOutcome,
+        }),
+        ...(dto.budgetAllowance !== undefined && {
+          budgetAllowance: dto.budgetAllowance,
+        }),
+        ...(dto.projectDeadline !== undefined && {
+          projectDeadline: new Date(dto.projectDeadline),
+        }),
+        ...(dto.thumbnailUrl !== undefined && {
+          thumbnailUrl: dto.thumbnailUrl,
+        }),
+        ...(dto.videoUrl !== undefined && { videoUrl: dto.videoUrl }),
+        ...(dto.submissionType !== undefined && {
+          submissionType: dto.submissionType,
+        }),
+        ...(dto.status !== undefined && { status: dto.status }),
       },
     });
   }

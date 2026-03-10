@@ -7,19 +7,19 @@ export class UpdateProjectIntakeDto {
 
   @IsOptional()
   @IsString()
-  budgetRange?: string;
-
-  @IsOptional()
-  @IsString()
-  timeInvestment?: string;
-
-  @IsOptional()
-  @IsString()
   projectDescription?: string;
 
   @IsOptional()
   @IsString()
-  goals?: string;
+  expectedOutcome?: string;
+
+  @IsOptional()
+  @IsString()
+  budgetAllowance?: string;
+
+  @IsOptional()
+  @IsString()
+  projectDeadline?: string;
 
   @IsOptional()
   @IsString()
@@ -27,7 +27,12 @@ export class UpdateProjectIntakeDto {
 
   @IsOptional()
   @IsString()
-  mp4Url?: string;
+  videoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['guided', 'self-guided'])
+  submissionType?: string;
 
   @IsOptional()
   @IsString()

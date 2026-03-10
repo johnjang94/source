@@ -7,19 +7,19 @@ export class UpdateProjectDto {
 
   @IsOptional()
   @IsString()
-  budgetRange?: string;
-
-  @IsOptional()
-  @IsString()
-  timeInvestment?: string;
-
-  @IsOptional()
-  @IsString()
   projectDescription?: string;
 
   @IsOptional()
   @IsString()
-  goals?: string;
+  expectedOutcome?: string;
+
+  @IsOptional()
+  @IsString()
+  budgetAllowance?: string;
+
+  @IsOptional()
+  @IsString()
+  projectDeadline?: string;
 
   @IsOptional()
   @IsString()

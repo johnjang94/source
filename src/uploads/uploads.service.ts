@@ -38,6 +38,13 @@ export class UploadsService {
           folder: 'projects/videos',
         };
 
+      case UploadKind.PROJECT_VIDEO:
+        return {
+          allowedMimeTypes: ['video/mp4', 'video/quicktime', 'video/webm'],
+          maxBytes: 200 * 1024 * 1024,
+          folder: 'projects/videos',
+        };
+
       case UploadKind.COMPANY_LOGO:
         return {
           allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],

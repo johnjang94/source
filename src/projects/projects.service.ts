@@ -12,21 +12,28 @@ const clientUserSelect = {
     email: true,
     firstName: true,
     lastName: true,
-    companyName: true,
     avatarUrl: true,
-    companyLogoUrl: true,
+    company: {
+      select: {
+        name: true,
+        industry: true,
+        serviceDescription: true,
+        logoUrl: true,
+      },
+    },
   },
 };
 
 const projectPublicSelect = {
   id: true,
   projectName: true,
-  budgetRange: true,
-  timeInvestment: true,
   projectDescription: true,
-  goals: true,
+  expectedOutcome: true,
+  budgetAllowance: true,
+  projectDeadline: true,
   thumbnailUrl: true,
-  mp4Url: true,
+  videoUrl: true,
+  submissionType: true,
   status: true,
   createdAt: true,
   clientUser: clientUserSelect,
@@ -38,12 +45,8 @@ export class ProjectsService {
 
   async findMine(userId: string) {
     return this.prisma.project.findMany({
-      where: {
-        clientUserId: userId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { clientUserId: userId },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -91,9 +94,7 @@ export class ProjectsService {
 
     const projectIds = applications.map((item) => item.projectId);
 
-    if (projectIds.length === 0) {
-      return [];
-    }
+    if (projectIds.length === 0) return [];
 
     return this.prisma.project.findMany({
       where: { id: { in: projectIds } },
@@ -124,33 +125,27 @@ export class ProjectsService {
   }
 
   async updateMine(id: string, userId: string, dto: UpdateProjectDto) {
-    const existing = await this.prisma.project.findUnique({
-      where: { id },
-    });
+    const existing = await this.prisma.project.findUnique({ where: { id } });
 
-    if (!existing) {
-      throw new NotFoundException('Project not found.');
-    }
-
-    if (existing.clientUserId !== userId) {
+    if (!existing) throw new NotFoundException('Project not found.');
+    if (existing.clientUserId !== userId)
       throw new ForbiddenException('You cannot edit this project.');
-    }
 
     const normalizedData = {
       ...(dto.projectName !== undefined && {
         projectName: dto.projectName.trim(),
       }),
-      ...(dto.budgetRange !== undefined && {
-        budgetRange: dto.budgetRange.trim(),
-      }),
-      ...(dto.timeInvestment !== undefined && {
-        timeInvestment: dto.timeInvestment.trim(),
-      }),
       ...(dto.projectDescription !== undefined && {
         projectDescription: dto.projectDescription.trim(),
       }),
-      ...(dto.goals !== undefined && {
-        goals: dto.goals.trim(),
+      ...(dto.expectedOutcome !== undefined && {
+        expectedOutcome: dto.expectedOutcome.trim(),
+      }),
+      ...(dto.budgetAllowance !== undefined && {
+        budgetAllowance: dto.budgetAllowance.trim(),
+      }),
+      ...(dto.projectDeadline !== undefined && {
+        projectDeadline: new Date(dto.projectDeadline),
       }),
       ...(dto.thumbnailUrl !== undefined && {
         thumbnailUrl: dto.thumbnailUrl,
@@ -164,20 +159,12 @@ export class ProjectsService {
   }
 
   async deleteMine(id: string, userId: string) {
-    const existing = await this.prisma.project.findUnique({
-      where: { id },
-    });
+    const existing = await this.prisma.project.findUnique({ where: { id } });
 
-    if (!existing) {
-      throw new NotFoundException('Project not found.');
-    }
-
-    if (existing.clientUserId !== userId) {
+    if (!existing) throw new NotFoundException('Project not found.');
+    if (existing.clientUserId !== userId)
       throw new ForbiddenException('You cannot delete this project.');
-    }
 
-    return this.prisma.project.delete({
-      where: { id },
-    });
+    return this.prisma.project.delete({ where: { id } });
   }
 }

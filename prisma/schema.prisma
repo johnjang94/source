@@ -12,9 +12,10 @@ model User {
   email               String               @unique
   firstName           String?
   lastName            String?
-  companyName         String?
   avatarUrl           String?
-  companyLogoUrl      String? 
+
+  company             Company?
+
   projectIntakes      ProjectIntake[]
   projectApplications ProjectApplication[]
   projects            Project[]
@@ -23,16 +24,34 @@ model User {
   updatedAt           DateTime             @updatedAt
 }
 
+model Company {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  name               String
+  industry           String?
+  registeredNumber   String?
+  serviceDescription String?
+  logoUrl            String?
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+}
+
 model ProjectIntake {
   id                 String    @id @default(cuid())
   clientUserId       String
   projectName        String
-  budgetRange        String
-  timeInvestment     String
   projectDescription String
-  goals              String
+  expectedOutcome    String
+  budgetAllowance    String
+  projectDeadline    DateTime
   thumbnailUrl       String?
-  mp4Url             String?
+  videoUrl           String?
+  submissionType     String    @default("guided")
   status             String    @default("submitted")
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -48,12 +67,13 @@ model Project {
   intakeId           String               @unique
   clientUserId       String
   projectName        String
-  budgetRange        String
-  timeInvestment     String
   projectDescription String
-  goals              String
+  expectedOutcome    String
+  budgetAllowance    String
+  projectDeadline    DateTime
   thumbnailUrl       String?
-  mp4Url             String?
+  videoUrl           String?
+  submissionType     String               @default("guided")
   status             String               @default("submitted")
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt

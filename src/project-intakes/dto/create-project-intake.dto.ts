@@ -5,16 +5,16 @@ export class CreateProjectIntakeDto {
   projectName: string;
 
   @IsString()
-  budgetRange: string;
-
-  @IsString()
-  timeInvestment: string;
-
-  @IsString()
   projectDescription: string;
 
   @IsString()
-  goals: string;
+  expectedOutcome: string;
+
+  @IsString()
+  budgetAllowance: string;
+
+  @IsString()
+  projectDeadline: string;
 
   @IsOptional()
   @IsString()
@@ -22,7 +22,12 @@ export class CreateProjectIntakeDto {
 
   @IsOptional()
   @IsString()
-  mp4Url?: string;
+  videoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['guided', 'self-guided'])
+  submissionType?: string;
 
   @IsOptional()
   @IsString()
