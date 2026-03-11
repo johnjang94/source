@@ -26,12 +26,12 @@ export class AuthController {
     const { id, email } = req.user;
 
     const existingUser = await this.prisma.user.findUnique({
-      where: { id },
+      where: { email },
     });
 
     if (existingUser) {
       await this.prisma.user.update({
-        where: { id },
+        where: { email },
         data: {
           ...(body.username !== undefined && { username: body.username }),
           ...(body.firstName !== undefined && { firstName: body.firstName }),
@@ -53,8 +53,10 @@ export class AuthController {
     }
 
     if (body.companyName) {
+      const user = await this.prisma.user.findUnique({ where: { email } });
+
       await this.prisma.company.upsert({
-        where: { userId: id },
+        where: { userId: user!.id },
         update: {
           ...(body.companyName !== undefined && { name: body.companyName }),
           ...(body.industry !== undefined && { industry: body.industry }),
@@ -69,7 +71,7 @@ export class AuthController {
           }),
         },
         create: {
-          userId: id,
+          userId: user!.id,
           name: body.companyName,
           industry: body.industry ?? null,
           registeredNumber: body.registeredNumber ?? null,
