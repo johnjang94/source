@@ -39,6 +39,16 @@ export class ProjectIntakesService {
   }
 
   async createForUser(userId: string, dto: CreateProjectIntakeDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException(
+        'User not found. Please complete sign-up first.',
+      );
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const intake = await tx.projectIntake.create({
         data: {
