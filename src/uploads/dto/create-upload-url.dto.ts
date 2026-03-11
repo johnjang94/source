@@ -6,6 +6,7 @@ export enum UploadKind {
   PROJECT_MP4 = 'project-mp4',
   PROJECT_VIDEO = 'project-video',
   COMPANY_LOGO = 'company-logo',
+  RESUME = 'resume',
 }
 
 export class CreateUploadUrlDto {

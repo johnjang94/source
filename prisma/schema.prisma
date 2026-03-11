@@ -53,6 +53,7 @@ model ProjectIntake {
   thumbnailUrl       String?
   videoUrl           String?
   submissionType     String    @default("guided")
+  position           String?   @default("Project Coordinator")
   status             String    @default("submitted")
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -75,7 +76,9 @@ model Project {
   thumbnailUrl       String?
   videoUrl           String?
   submissionType     String               @default("guided")
+  position           String?              @default("Project Coordinator")
   status             String               @default("submitted")
+  viewCount          Int                  @default(0)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 
@@ -87,16 +90,42 @@ model Project {
 }
 
 model ProjectApplication {
-  id        String   @id @default(cuid())
-  projectId String
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String            @id @default(cuid())
+  projectId   String
+  userId      String
+  status      ApplicationStatus @default(APPLIED)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  form        ApplicationForm?
 
   @@unique([projectId, userId])
   @@index([projectId])
   @@index([userId])
+}
+
+model ApplicationForm {
+  id              String             @id @default(cuid())
+  applicationId   String             @unique
+  firstName       String
+  lastName        String
+  email           String
+  position        String
+  resumeR2Key     String
+  portfolioLink   String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  application     ProjectApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+enum ApplicationStatus {
+  APPLIED
+  INTERVIEW
+  SELECTED
+  REJECTED
 }

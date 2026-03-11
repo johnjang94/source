@@ -52,6 +52,17 @@ export class UploadsService {
           folder: 'profiles/logos',
         };
 
+      case UploadKind.RESUME:
+        return {
+          allowedMimeTypes: [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          ],
+          maxBytes: 10 * 1024 * 1024,
+          folder: 'resumes',
+        };
+
       default:
         throw new BadRequestException('Unsupported upload kind.');
     }

@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectApplicationDto } from './dto/create-project-application.dto';
 
@@ -7,6 +11,14 @@ export class ProjectApplicationsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async apply(userId: string, dto: CreateProjectApplicationDto) {
+    const project = await this.prisma.project.findUnique({
+      where: { id: dto.projectId },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found.');
+    }
+
     const existing = await this.prisma.projectApplication.findUnique({
       where: {
         projectId_userId: {
@@ -20,11 +32,27 @@ export class ProjectApplicationsService {
       throw new ConflictException('Already applied to this project.');
     }
 
-    return this.prisma.projectApplication.create({
-      data: {
-        projectId: dto.projectId,
-        userId,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const application = await tx.projectApplication.create({
+        data: {
+          projectId: dto.projectId,
+          userId,
+        },
+      });
+
+      await tx.applicationForm.create({
+        data: {
+          applicationId: application.id,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          email: dto.email,
+          position: project.position ?? 'Project Coordinator',
+          resumeR2Key: dto.resumeR2Key,
+          portfolioLink: dto.portfolioLink ?? null,
+        },
+      });
+
+      return { ok: true, applicationId: application.id };
     });
   }
 
