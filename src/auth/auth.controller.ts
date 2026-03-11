@@ -12,6 +12,7 @@ export class AuthController {
     @Req() req: any,
     @Body()
     body: {
+      username?: string;
       firstName?: string;
       lastName?: string;
       avatarUrl?: string | null;
@@ -24,21 +25,32 @@ export class AuthController {
   ) {
     const { id, email } = req.user;
 
-    await this.prisma.user.upsert({
+    const existingUser = await this.prisma.user.findUnique({
       where: { id },
-      update: {
-        ...(body.firstName !== undefined && { firstName: body.firstName }),
-        ...(body.lastName !== undefined && { lastName: body.lastName }),
-        ...(body.avatarUrl !== undefined && { avatarUrl: body.avatarUrl }),
-      },
-      create: {
-        id,
-        email,
-        firstName: body.firstName ?? null,
-        lastName: body.lastName ?? null,
-        avatarUrl: body.avatarUrl ?? null,
-      },
     });
+
+    if (existingUser) {
+      await this.prisma.user.update({
+        where: { id },
+        data: {
+          ...(body.username !== undefined && { username: body.username }),
+          ...(body.firstName !== undefined && { firstName: body.firstName }),
+          ...(body.lastName !== undefined && { lastName: body.lastName }),
+          ...(body.avatarUrl !== undefined && { avatarUrl: body.avatarUrl }),
+        },
+      });
+    } else {
+      await this.prisma.user.create({
+        data: {
+          id,
+          email,
+          username: body.username ?? null,
+          firstName: body.firstName ?? null,
+          lastName: body.lastName ?? null,
+          avatarUrl: body.avatarUrl ?? null,
+        },
+      });
+    }
 
     if (body.companyName) {
       await this.prisma.company.upsert({
