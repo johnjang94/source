@@ -6,6 +6,15 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectApplicationDto } from './dto/create-project-application.dto';
 
+const HR_POSITIONS = [
+  'HR Manager',
+  'Recruiter',
+  'Human Resources Specialist',
+  'Talent Acquisition',
+  'HR Coordinator',
+  'People Operations',
+];
+
 @Injectable()
 export class ProjectApplicationsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -40,19 +49,21 @@ export class ProjectApplicationsService {
         },
       });
 
+      const position = project.position ?? 'Project Coordinator';
+
       await tx.applicationForm.create({
         data: {
           applicationId: application.id,
           firstName: dto.firstName,
           lastName: dto.lastName,
           email: dto.email,
-          position: project.position ?? 'Project Coordinator',
+          position,
           resumeR2Key: dto.resumeR2Key,
           portfolioLink: dto.portfolioLink ?? null,
         },
       });
 
-      return { ok: true, applicationId: application.id };
+      return { ok: true, applicationId: application.id, position };
     });
   }
 
