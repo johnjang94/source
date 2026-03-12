@@ -1,19 +1,32 @@
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateProjectIntakeDto {
   @IsString()
+  @IsNotEmpty()
   projectName: string;
 
   @IsString()
+  @IsNotEmpty()
   projectDescription: string;
 
   @IsString()
+  @IsNotEmpty()
   expectedOutcome: string;
 
-  @IsString()
-  budgetAllowance: string;
+  @IsNumber()
+  @Min(0)
+  estimatedBudget: number;
 
-  @IsString()
+  @IsDateString()
   projectDeadline: string;
 
   @IsOptional()

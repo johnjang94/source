@@ -4,21 +4,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from 'src/r2/storage.service';
 import { CreateProjectIntakeDto } from './dto/create-project-intake.dto';
 import { UpdateProjectIntakeDto } from './dto/update-project-intake.dto';
 
 @Injectable()
 export class ProjectIntakesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   async listByUser(userId: string) {
     return this.prisma.projectIntake.findMany({
-      where: {
-        clientUserId: userId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { clientUserId: userId },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -27,61 +27,26 @@ export class ProjectIntakesService {
       where: { id },
     });
 
-    if (!intake) {
-      throw new NotFoundException('Project intake not found.');
-    }
-
-    if (intake.clientUserId !== userId) {
-      throw new ForbiddenException('You cannot access this project intake.');
-    }
+    if (!intake) throw new NotFoundException('Project intake not found.');
+    if (intake.clientUserId !== userId) throw new ForbiddenException();
 
     return intake;
   }
 
   async createForUser(userId: string, dto: CreateProjectIntakeDto) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!existingUser) {
-      throw new NotFoundException(
-        'User not found. Please complete sign-up first.',
-      );
-    }
-
-    return this.prisma.$transaction(async (tx) => {
-      const intake = await tx.projectIntake.create({
-        data: {
-          clientUserId: userId,
-          projectName: dto.projectName,
-          projectDescription: dto.projectDescription,
-          expectedOutcome: dto.expectedOutcome,
-          budgetAllowance: dto.budgetAllowance,
-          projectDeadline: new Date(dto.projectDeadline),
-          thumbnailUrl: dto.thumbnailUrl ?? null,
-          videoUrl: dto.videoUrl ?? null,
-          submissionType: dto.submissionType ?? 'guided',
-          status: 'submitted',
-        },
-      });
-
-      await tx.project.create({
-        data: {
-          intakeId: intake.id,
-          clientUserId: userId,
-          projectName: dto.projectName,
-          projectDescription: dto.projectDescription,
-          expectedOutcome: dto.expectedOutcome,
-          budgetAllowance: dto.budgetAllowance,
-          projectDeadline: new Date(dto.projectDeadline),
-          thumbnailUrl: dto.thumbnailUrl ?? null,
-          videoUrl: dto.videoUrl ?? null,
-          submissionType: dto.submissionType ?? 'guided',
-          status: 'open',
-        },
-      });
-
-      return intake;
+    return this.prisma.projectIntake.create({
+      data: {
+        clientUserId: userId,
+        projectName: dto.projectName,
+        projectDescription: dto.projectDescription,
+        expectedOutcome: dto.expectedOutcome,
+        budgetAllowance: String(dto.estimatedBudget),
+        projectDeadline: new Date(dto.projectDeadline),
+        thumbnailUrl: dto.thumbnailUrl ?? null,
+        videoUrl: dto.videoUrl ?? null,
+        submissionType: dto.submissionType ?? 'guided',
+        status: dto.status ?? 'submitted',
+      },
     });
   }
 
@@ -90,13 +55,8 @@ export class ProjectIntakesService {
       where: { id },
     });
 
-    if (!intake) {
-      throw new NotFoundException('Project intake not found.');
-    }
-
-    if (intake.clientUserId !== userId) {
-      throw new ForbiddenException('You cannot update this project intake.');
-    }
+    if (!intake) throw new NotFoundException('Project intake not found.');
+    if (intake.clientUserId !== userId) throw new ForbiddenException();
 
     return this.prisma.projectIntake.update({
       where: { id },
@@ -108,8 +68,8 @@ export class ProjectIntakesService {
         ...(dto.expectedOutcome !== undefined && {
           expectedOutcome: dto.expectedOutcome,
         }),
-        ...(dto.budgetAllowance !== undefined && {
-          budgetAllowance: dto.budgetAllowance,
+        ...(dto.estimatedBudget !== undefined && {
+          budgetAllowance: String(dto.estimatedBudget),
         }),
         ...(dto.projectDeadline !== undefined && {
           projectDeadline: new Date(dto.projectDeadline),
@@ -129,37 +89,14 @@ export class ProjectIntakesService {
   async deleteForUser(id: string, userId: string) {
     const intake = await this.prisma.projectIntake.findUnique({
       where: { id },
-      include: {
-        project: true,
-      },
     });
 
-    if (!intake) {
-      throw new NotFoundException('Project intake not found.');
-    }
+    if (!intake) throw new NotFoundException('Project intake not found.');
+    if (intake.clientUserId !== userId) throw new ForbiddenException();
 
-    if (intake.clientUserId !== userId) {
-      throw new ForbiddenException('You cannot delete this project intake.');
-    }
+    await this.storage.deleteByUrl(intake.thumbnailUrl);
+    await this.storage.deleteByUrl(intake.videoUrl);
 
-    return this.prisma.$transaction(async (tx) => {
-      if (intake.project) {
-        await tx.projectApplication.deleteMany({
-          where: {
-            projectId: intake.project.id,
-          },
-        });
-
-        await tx.project.delete({
-          where: {
-            id: intake.project.id,
-          },
-        });
-      }
-
-      return tx.projectIntake.delete({
-        where: { id },
-      });
-    });
+    return this.prisma.projectIntake.delete({ where: { id } });
   }
 }

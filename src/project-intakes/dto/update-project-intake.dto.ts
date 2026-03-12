@@ -1,4 +1,11 @@
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class UpdateProjectIntakeDto {
   @IsOptional()
@@ -14,11 +21,12 @@ export class UpdateProjectIntakeDto {
   expectedOutcome?: string;
 
   @IsOptional()
-  @IsString()
-  budgetAllowance?: string;
+  @IsNumber()
+  @Min(0)
+  estimatedBudget?: number;
 
   @IsOptional()
-  @IsString()
+  @IsDateString()
   projectDeadline?: string;
 
   @IsOptional()
