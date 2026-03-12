@@ -34,19 +34,39 @@ export class ProjectIntakesService {
   }
 
   async createForUser(userId: string, dto: CreateProjectIntakeDto) {
-    return this.prisma.projectIntake.create({
-      data: {
-        clientUserId: userId,
-        projectName: dto.projectName,
-        projectDescription: dto.projectDescription,
-        expectedOutcome: dto.expectedOutcome,
-        budgetAllowance: String(dto.estimatedBudget),
-        projectDeadline: new Date(dto.projectDeadline),
-        thumbnailUrl: dto.thumbnailUrl ?? null,
-        videoUrl: dto.videoUrl ?? null,
-        submissionType: dto.submissionType ?? 'guided',
-        status: dto.status ?? 'submitted',
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const intake = await tx.projectIntake.create({
+        data: {
+          clientUserId: userId,
+          projectName: dto.projectName,
+          projectDescription: dto.projectDescription,
+          expectedOutcome: dto.expectedOutcome,
+          budgetAllowance: String(dto.estimatedBudget),
+          projectDeadline: new Date(dto.projectDeadline),
+          thumbnailUrl: dto.thumbnailUrl ?? null,
+          videoUrl: dto.videoUrl ?? null,
+          submissionType: dto.submissionType ?? 'guided',
+          status: dto.status ?? 'submitted',
+        },
+      });
+
+      await tx.project.create({
+        data: {
+          intakeId: intake.id,
+          clientUserId: userId,
+          projectName: intake.projectName,
+          projectDescription: intake.projectDescription,
+          expectedOutcome: intake.expectedOutcome,
+          budgetAllowance: intake.budgetAllowance,
+          projectDeadline: intake.projectDeadline,
+          thumbnailUrl: intake.thumbnailUrl,
+          videoUrl: intake.videoUrl,
+          submissionType: intake.submissionType,
+          status: intake.status,
+        },
+      });
+
+      return intake;
     });
   }
 
