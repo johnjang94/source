@@ -1,22 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { R2Service } from './r2.service';
 
 @Injectable()
 export class StorageService {
-  private readonly client = new S3Client({
-    region: 'auto',
-    endpoint: process.env.R2_ENDPOINT,
-    credentials: {
-      accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
-    },
-  });
-
-  private readonly bucket = process.env.R2_BUCKET || '';
+  constructor(private readonly r2: R2Service) {}
 
   extractKeyFromUrl(url?: string | null) {
     if (!url) return null;
-
     try {
       const parsed = new URL(url);
       const key = parsed.pathname.replace(/^\/+/, '');
@@ -30,9 +21,9 @@ export class StorageService {
     const key = this.extractKeyFromUrl(url);
     if (!key) return;
 
-    await this.client.send(
+    await this.r2.getClient().send(
       new DeleteObjectCommand({
-        Bucket: this.bucket,
+        Bucket: this.r2.getBucketName(),
         Key: key,
       }),
     );
