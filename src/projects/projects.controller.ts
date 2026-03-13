@@ -53,6 +53,17 @@ export class ProjectsController {
   }
 
   @UseGuards(SupabaseAuthGuard)
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string },
+    @AuthUser() user: { id: string },
+  ) {
+    const item = await this.service.updateStatus(id, user.id, body.status);
+    return { ok: true, item };
+  }
+
+  @UseGuards(SupabaseAuthGuard)
   @Patch(':id')
   async updateMine(
     @Param('id') id: string,

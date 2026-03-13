@@ -158,6 +158,19 @@ export class ProjectsService {
     });
   }
 
+  async updateStatus(id: string, userId: string, status: string) {
+    const existing = await this.prisma.project.findUnique({ where: { id } });
+
+    if (!existing) throw new NotFoundException('Project not found.');
+    if (existing.clientUserId !== userId)
+      throw new ForbiddenException('You cannot update this project.');
+
+    return this.prisma.project.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
   async deleteMine(id: string, userId: string) {
     const existing = await this.prisma.project.findUnique({ where: { id } });
 
