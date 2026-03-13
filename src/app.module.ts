@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProjectApplicationsModule } from './project-applications/project-applications.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ProjectApplicationsModule } from './project-applications/project-applic
     ProjectsModule,
     AuthModule,
     ProjectApplicationsModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
 })
