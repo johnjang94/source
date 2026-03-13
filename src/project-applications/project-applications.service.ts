@@ -100,12 +100,17 @@ export class ProjectApplicationsService {
       },
     });
 
+    const publicBaseUrl =
+      process.env.R2_PUBLIC_BASE_URL?.replace(/\/$/, '') ?? '';
+
     return applications.map((app) => ({
       id: app.id,
       firstName: app.form?.firstName ?? '',
       lastName: app.form?.lastName ?? '',
       position: app.form?.position ?? '',
-      resumeR2Key: app.form?.resumeR2Key ?? null,
+      resumeUrl: app.form?.resumeR2Key
+        ? `${publicBaseUrl}/${app.form.resumeR2Key}`
+        : null,
       portfolioLink: app.form?.portfolioLink ?? null,
       avatarUrl: app.user?.avatarUrl ?? null,
       createdAt: app.createdAt,
