@@ -54,6 +54,18 @@ export class ProjectApplicationsService {
         },
       });
 
+      await tx.notification.create({
+        data: {
+          recipientId: project.clientUserId,
+          senderId: userId,
+          projectId: dto.projectId,
+          type: 'application',
+          title: 'New Application',
+          message: `${dto.firstName} ${dto.lastName} applied to ${project.projectName}`,
+          isRead: false,
+        },
+      });
+
       return { ok: true, applicationId: application.id, position };
     });
   }
