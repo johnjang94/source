@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ProjectApplicationsService } from './project-applications.service';
 import { CreateProjectApplicationDto } from './dto/create-project-application.dto';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
@@ -22,5 +22,10 @@ export class ProjectApplicationsController {
   @Get('mine')
   async listMine(@AuthUser() user: { id: string }) {
     return this.projectApplicationsService.listByUser(user.id);
+  }
+
+  @Get('by-project')
+  async listByProject(@Query('projectId') projectId: string) {
+    return this.projectApplicationsService.listByProject(projectId);
   }
 }

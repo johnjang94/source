@@ -89,4 +89,26 @@ export class ProjectApplicationsService {
 
     return applications.map((app) => app.project);
   }
+
+  async listByProject(projectId: string) {
+    const applications = await this.prisma.projectApplication.findMany({
+      where: { projectId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        form: true,
+        user: true,
+      },
+    });
+
+    return applications.map((app) => ({
+      id: app.id,
+      firstName: app.form?.firstName ?? '',
+      lastName: app.form?.lastName ?? '',
+      position: app.form?.position ?? '',
+      resumeR2Key: app.form?.resumeR2Key ?? null,
+      portfolioLink: app.form?.portfolioLink ?? null,
+      avatarUrl: app.user?.avatarUrl ?? null,
+      createdAt: app.createdAt,
+    }));
+  }
 }
