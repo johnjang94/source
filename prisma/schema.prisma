@@ -146,6 +146,16 @@ model Notification {
   @@index([recipientId, isRead])
 }
 
+model EarlyAccess {
+  id        String   @id @default(cuid())
+  fullName  String
+  email     String   @unique
+  role      String
+  portfolio String?
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
 enum ApplicationStatus {
   APPLIED
   INTERVIEW
