@@ -156,6 +156,26 @@ model EarlyAccess {
   createdAt DateTime @default(now())
 }
 
+model Message {
+  id          String   @id @default(cuid())
+  chatRoomId  String
+  senderId    String
+  content     String
+  createdAt   DateTime @default(now())
+
+  chatRoom    ChatRoom @relation(fields: [chatRoomId], references: [id])
+}
+
+model ChatRoom {
+  id          String    @id @default(cuid())
+  projectId   String
+  applicantId String
+  createdAt   DateTime  @default(now())
+  messages    Message[]
+
+  @@unique([projectId, applicantId])
+}
+
 enum ApplicationStatus {
   APPLIED
   INTERVIEW

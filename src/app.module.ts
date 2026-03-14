@@ -9,6 +9,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ProjectApplicationsModule } from './project-applications/project-applications.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EarlyAccessModule } from './early-access/early-access-module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { EarlyAccessModule } from './early-access/early-access-module';
     ProjectApplicationsModule,
     NotificationsModule,
     EarlyAccessModule,
+    ChatModule,
   ],
   controllers: [HealthController],
 })
