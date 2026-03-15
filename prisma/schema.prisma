@@ -8,12 +8,15 @@ datasource db {
 }
 
 model User {
-  id                  String               @id @default(cuid())
-  email               String               @unique
-  username            String?              @unique
-  firstName           String?
-  lastName            String?
-  avatarUrl           String?
+  id         String  @id @default(cuid())
+  email      String  @unique
+  username   String? @unique
+  firstName  String?
+  lastName   String?
+  avatarUrl  String?
+  avatarPath String?
+  role       String?
+  points     Int     @default(0)
 
   company             Company?
   projectIntakes      ProjectIntake[]
@@ -165,7 +168,7 @@ model Message {
   content    String
   createdAt  DateTime @default(now())
 
-  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id])
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
 }
 
 model ChatRoom {
@@ -175,7 +178,7 @@ model ChatRoom {
   createdAt   DateTime @default(now())
 
   messages Message[]
-  project  Project   @relation(fields: [projectId], references: [id])
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, applicantId])
 }

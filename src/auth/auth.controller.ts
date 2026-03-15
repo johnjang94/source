@@ -1,10 +1,38 @@
-import { Controller, Post, Req, UseGuards, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Req,
+  UseGuards,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { SupabaseAuthGuard } from './supabase-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly prisma: PrismaService) {}
+
+  @Get('me')
+  @UseGuards(SupabaseAuthGuard)
+  async me(@Req() req: any) {
+    const { email } = req.user;
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { company: true },
+    });
+    return user;
+  }
+
+  @Get('check-username')
+  @UseGuards(SupabaseAuthGuard)
+  async checkUsername(@Query('username') username: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+    });
+    return { taken: !!user };
+  }
 
   @Post('sync')
   @UseGuards(SupabaseAuthGuard)
@@ -16,6 +44,7 @@ export class AuthController {
       firstName?: string;
       lastName?: string;
       avatarUrl?: string | null;
+      role?: string;
       companyName?: string;
       industry?: string;
       registeredNumber?: string;
@@ -24,11 +53,9 @@ export class AuthController {
     },
   ) {
     const { id, email } = req.user;
-
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
-
     if (existingUser) {
       await this.prisma.user.update({
         where: { email },
@@ -37,6 +64,7 @@ export class AuthController {
           ...(body.firstName !== undefined && { firstName: body.firstName }),
           ...(body.lastName !== undefined && { lastName: body.lastName }),
           ...(body.avatarUrl !== undefined && { avatarUrl: body.avatarUrl }),
+          ...(body.role !== undefined && { role: body.role }),
         },
       });
     } else {
@@ -48,13 +76,12 @@ export class AuthController {
           firstName: body.firstName ?? null,
           lastName: body.lastName ?? null,
           avatarUrl: body.avatarUrl ?? null,
+          role: body.role ?? null,
         },
       });
     }
-
     if (body.companyName) {
       const user = await this.prisma.user.findUnique({ where: { email } });
-
       await this.prisma.company.upsert({
         where: { userId: user!.id },
         update: {
@@ -80,7 +107,6 @@ export class AuthController {
         },
       });
     }
-
     return { ok: true };
   }
 }
