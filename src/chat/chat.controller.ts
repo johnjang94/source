@@ -16,6 +16,11 @@ export class ChatController {
     return this.chatService.getMessages(chatRoomId);
   }
 
+  @Get('debug')
+  debug() {
+    return this.chatService.debug();
+  }
+
   @Post('messages')
   sendMessage(@Body() dto: SendMessageDto) {
     return this.chatService.sendMessage(dto);

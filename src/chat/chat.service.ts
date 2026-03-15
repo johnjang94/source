@@ -35,6 +35,14 @@ export class ChatService {
     });
   }
 
+  async debug() {
+    const rooms = await this.prisma.chatRoom.findMany();
+    const users = await this.prisma.user.findMany({
+      select: { id: true, email: true },
+    });
+    return { rooms, users };
+  }
+
   async sendMessage(dto: SendMessageDto) {
     const message = await this.prisma.message.create({
       data: {
