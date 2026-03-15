@@ -5,10 +5,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectApplicationDto } from './dto/create-project-application.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ProjectApplicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async apply(userId: string, dto: CreateProjectApplicationDto) {
     const project = await this.prisma.project.findUnique({
@@ -32,19 +36,19 @@ export class ProjectApplicationsService {
       throw new ConflictException('Already applied to this project.');
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const application = await tx.projectApplication.create({
+    const position = project.position ?? 'Project Coordinator';
+
+    const application = await this.prisma.$transaction(async (tx) => {
+      const app = await tx.projectApplication.create({
         data: {
           projectId: dto.projectId,
           userId,
         },
       });
 
-      const position = project.position ?? 'Project Coordinator';
-
       await tx.applicationForm.create({
         data: {
-          applicationId: application.id,
+          applicationId: app.id,
           firstName: dto.firstName,
           lastName: dto.lastName,
           email: dto.email,
@@ -54,20 +58,20 @@ export class ProjectApplicationsService {
         },
       });
 
-      await tx.notification.create({
-        data: {
-          recipientId: project.clientUserId,
-          senderId: userId,
-          projectId: dto.projectId,
-          type: 'application',
-          title: 'New Application',
-          message: `${dto.firstName} ${dto.lastName} applied to ${project.projectName}`,
-          isRead: false,
-        },
-      });
-
-      return { ok: true, applicationId: application.id, position };
+      return app;
     });
+
+    // ✅ 트랜잭션 밖에서 emit — DB 저장 + 실시간 푸시 동시에
+    await this.notificationsService.createAndEmit({
+      recipientId: project.clientUserId,
+      senderId: userId,
+      projectId: dto.projectId,
+      type: 'application',
+      title: 'New Application',
+      message: `${dto.firstName} ${dto.lastName} applied to ${project.projectName}`,
+    });
+
+    return { ok: true, applicationId: application.id, position };
   }
 
   async listByUser(userId: string) {

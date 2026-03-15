@@ -16,7 +16,6 @@ model User {
   avatarUrl           String?
 
   company             Company?
-
   projectIntakes      ProjectIntake[]
   projectApplications ProjectApplication[]
   projects            Project[]
@@ -24,29 +23,29 @@ model User {
   receivedNotifications Notification[] @relation("ReceivedNotifications")
   sentNotifications     Notification[] @relation("SentNotifications")
 
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Company {
-  id                 String   @id @default(cuid())
-  userId             String   @unique
+  id                 String  @id @default(cuid())
+  userId             String  @unique
   name               String
   industry           String?
   registeredNumber   String?
   serviceDescription String?
   logoUrl            String?
 
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 model ProjectIntake {
-  id                 String    @id @default(cuid())
+  id                 String   @id @default(cuid())
   clientUserId       String
   projectName        String
   projectDescription String
@@ -55,21 +54,21 @@ model ProjectIntake {
   projectDeadline    DateTime
   thumbnailUrl       String?
   videoUrl           String?
-  submissionType     String    @default("guided")
-  position           String?   @default("Project Coordinator")
-  status             String    @default("submitted")
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  submissionType     String   @default("guided")
+  position           String?  @default("Project Coordinator")
+  status             String   @default("submitted")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  clientUser         User      @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
-  project            Project?
+  clientUser User     @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
+  project    Project?
 
   @@index([clientUserId])
 }
 
 model Project {
-  id                 String               @id @default(cuid())
-  intakeId           String               @unique
+  id                 String   @id @default(cuid())
+  intakeId           String   @unique
   clientUserId       String
   projectName        String
   projectDescription String
@@ -78,32 +77,33 @@ model Project {
   projectDeadline    DateTime
   thumbnailUrl       String?
   videoUrl           String?
-  submissionType     String               @default("guided")
-  position           String?              @default("Project Coordinator")
-  status             String               @default("submitted")
-  viewCount          Int                  @default(0)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  submissionType     String   @default("guided")
+  position           String?  @default("Project Coordinator")
+  status             String   @default("submitted")
+  viewCount          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  intake             ProjectIntake        @relation(fields: [intakeId], references: [id], onDelete: Cascade)
-  clientUser         User                 @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
-  applications       ProjectApplication[]
-  notifications      Notification[]
+  intake        ProjectIntake        @relation(fields: [intakeId], references: [id], onDelete: Cascade)
+  clientUser    User                 @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
+  applications  ProjectApplication[]
+  notifications Notification[]
+  chatRooms     ChatRoom[]
 
   @@index([clientUserId])
 }
 
 model ProjectApplication {
-  id          String            @id @default(cuid())
-  projectId   String
-  userId      String
-  status      ApplicationStatus @default(APPLIED)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id        String            @id @default(cuid())
+  projectId String
+  userId    String
+  status    ApplicationStatus @default(APPLIED)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
-  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  form        ApplicationForm?
+  project Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  form    ApplicationForm?
 
   @@unique([projectId, userId])
   @@index([projectId])
@@ -111,18 +111,19 @@ model ProjectApplication {
 }
 
 model ApplicationForm {
-  id              String             @id @default(cuid())
-  applicationId   String             @unique
-  firstName       String
-  lastName        String
-  email           String
-  position        String
-  resumeR2Key     String
-  portfolioLink   String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id            String  @id @default(cuid())
+  applicationId String  @unique
+  firstName     String
+  lastName      String
+  email         String
+  position      String
+  resumeR2Key   String
+  portfolioLink String?
 
-  application     ProjectApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  application ProjectApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
 }
@@ -138,40 +139,43 @@ model Notification {
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  recipient   User     @relation("ReceivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
-  sender      User?    @relation("SentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  recipient User     @relation("ReceivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender    User?    @relation("SentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([recipientId])
   @@index([recipientId, isRead])
 }
 
 model EarlyAccess {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   fullName  String
-  email     String   @unique
+  email     String  @unique
   role      String
   portfolio String?
   reason    String?
+
   createdAt DateTime @default(now())
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  chatRoomId  String
-  senderId    String
-  content     String
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  chatRoomId String
+  senderId   String
+  content    String
+  createdAt  DateTime @default(now())
 
-  chatRoom    ChatRoom @relation(fields: [chatRoomId], references: [id])
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id])
 }
 
 model ChatRoom {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   projectId   String
   applicantId String
-  createdAt   DateTime  @default(now())
-  messages    Message[]
+  createdAt   DateTime @default(now())
+
+  messages Message[]
+  project  Project   @relation(fields: [projectId], references: [id])
 
   @@unique([projectId, applicantId])
 }

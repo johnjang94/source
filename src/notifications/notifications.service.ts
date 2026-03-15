@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsGateway } from './notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsGateway: NotificationsGateway,
+  ) {}
 
   async getNotifications(userId: string) {
     const notifications = await this.prisma.notification.findMany({
@@ -39,5 +43,45 @@ export class NotificationsService {
     });
 
     return { success: true };
+  }
+
+  // 다른 서비스에서 알림 생성 시 호출
+  async createAndEmit(data: {
+    recipientId: string;
+    senderId?: string;
+    projectId?: string;
+    type: string;
+    title: string;
+    message: string;
+  }) {
+    const notification = await this.prisma.notification.create({
+      data: {
+        recipientId: data.recipientId,
+        senderId: data.senderId,
+        projectId: data.projectId,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+      },
+      include: {
+        project: { select: { id: true, projectName: true } },
+      },
+    });
+
+    const payload = {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      isRead: notification.isRead,
+      projectId: notification.projectId,
+      projectName: notification.project?.projectName ?? null,
+      createdAt: notification.createdAt,
+    };
+
+    // 실시간 emit
+    this.notificationsGateway.emitNotification(data.recipientId, payload);
+
+    return payload;
   }
 }
