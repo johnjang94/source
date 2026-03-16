@@ -18,6 +18,9 @@ export class NotificationsService {
         project: {
           select: { id: true, projectName: true },
         },
+        sender: {
+          select: { id: true, firstName: true, lastName: true, avatarUrl: true },
+        },
       },
     });
 
@@ -29,6 +32,9 @@ export class NotificationsService {
       isRead: n.isRead,
       projectId: n.projectId,
       projectName: n.project?.projectName ?? null,
+      senderFirstName: n.sender?.firstName ?? null,
+      senderLastName: n.sender?.lastName ?? null,
+      senderAvatarUrl: n.sender?.avatarUrl ?? null,
       createdAt: n.createdAt,
     }));
   }

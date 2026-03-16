@@ -13,7 +13,7 @@ export class ChatService {
   ) {}
 
   async getOrCreateRoom(dto: CreateRoomDto) {
-    return this.prisma.chatRoom.upsert({
+    const room = await this.prisma.chatRoom.upsert({
       where: {
         projectId_applicantId: {
           projectId: dto.projectId,
@@ -25,7 +25,38 @@ export class ChatService {
         projectId: dto.projectId,
         applicantId: dto.applicantId,
       },
+      include: {
+        project: {
+          select: {
+            clientUserId: true,
+            projectName: true,
+          },
+        },
+      },
     });
+
+    const memberIds = [
+      dto.applicantId,
+      room.project.clientUserId,
+    ].filter(Boolean);
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: memberIds } },
+      select: { id: true, firstName: true, lastName: true, avatarUrl: true },
+    });
+
+    const members: Record<string, { firstName: string | null; lastName: string | null; avatarUrl: string | null }> = {};
+    for (const u of users) {
+      members[u.id] = { firstName: u.firstName, lastName: u.lastName, avatarUrl: u.avatarUrl };
+    }
+
+    return {
+      id: room.id,
+      projectId: room.projectId,
+      applicantId: room.applicantId,
+      projectName: room.project.projectName,
+      members,
+    };
   }
 
   async getMessages(chatRoomId: string) {
