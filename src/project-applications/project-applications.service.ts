@@ -109,6 +109,7 @@ export class ProjectApplicationsService {
 
     return applications.map((app) => ({
       id: app.id,
+      userId: app.userId,
       firstName: app.form?.firstName ?? '',
       lastName: app.form?.lastName ?? '',
       position: app.form?.position ?? '',
