@@ -20,4 +20,17 @@ export class NotificationsController {
   ) {
     return this.notificationsService.markRead(user.id, body.ids);
   }
+
+  // 채팅방 입장 시 해당 대화의 discussion 알림을 Archive로 처리
+  @Patch('mark-chat-read')
+  async markChatRead(
+    @AuthUser() user: { id: string },
+    @Body() body: { senderId: string; projectId: string },
+  ) {
+    return this.notificationsService.markChatDiscussionRead({
+      recipientId: user.id,
+      senderId: body.senderId,
+      projectId: body.projectId,
+    });
+  }
 }

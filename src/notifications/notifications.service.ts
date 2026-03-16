@@ -90,4 +90,88 @@ export class NotificationsService {
 
     return payload;
   }
+
+  // 채팅 메세지 알림: 기존 알림이 있으면 isRead=false로 되살리고, 없으면 새로 생성
+  async upsertDiscussionNotification(data: {
+    recipientId: string;
+    senderId: string;
+    projectId: string;
+  }) {
+    const existing = await this.prisma.notification.findFirst({
+      where: {
+        recipientId: data.recipientId,
+        senderId: data.senderId,
+        projectId: data.projectId,
+        type: 'discussion',
+      },
+      include: {
+        project: { select: { id: true, projectName: true } },
+        sender: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+      },
+    });
+
+    let notification: any;
+
+    if (existing) {
+      notification = await this.prisma.notification.update({
+        where: { id: existing.id },
+        data: { isRead: false },
+        include: {
+          project: { select: { id: true, projectName: true } },
+          sender: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+      });
+    } else {
+      notification = await this.prisma.notification.create({
+        data: {
+          recipientId: data.recipientId,
+          senderId: data.senderId,
+          projectId: data.projectId,
+          type: 'discussion',
+          title: 'New Message',
+          message: 'You have a new message',
+        },
+        include: {
+          project: { select: { id: true, projectName: true } },
+          sender: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+      });
+    }
+
+    const payload = {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      isRead: notification.isRead,
+      projectId: notification.projectId,
+      projectName: notification.project?.projectName ?? null,
+      senderFirstName: notification.sender?.firstName ?? null,
+      senderLastName: notification.sender?.lastName ?? null,
+      senderAvatarUrl: notification.sender?.avatarUrl ?? null,
+      createdAt: notification.createdAt,
+    };
+
+    this.notificationsGateway.emitNotification(data.recipientId, payload);
+    return payload;
+  }
+
+  // 채팅방 입장 시: 해당 채팅의 discussion 알림을 모두 읽음 처리 (Archive로)
+  async markChatDiscussionRead(data: {
+    recipientId: string;
+    senderId: string;
+    projectId: string;
+  }) {
+    await this.prisma.notification.updateMany({
+      where: {
+        recipientId: data.recipientId,
+        senderId: data.senderId,
+        projectId: data.projectId,
+        type: 'discussion',
+        isRead: false,
+      },
+      data: { isRead: true },
+    });
+    return { success: true };
+  }
 }

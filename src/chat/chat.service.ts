@@ -99,14 +99,15 @@ export class ChatService {
           ? chatRoom.applicantId
           : chatRoom.project.clientUserId;
 
-      await this.notificationsService.createAndEmit({
-        recipientId,
-        senderId: dto.senderId,
-        projectId: chatRoom.project.id,
-        type: 'discussion',
-        title: 'New Message',
-        message: `You have a new message regarding ${chatRoom.project.projectName}`,
-      });
+      // 수신자가 현재 같은 채팅방 안에 있으면 알림 생성 skip (실시간으로 보이니까)
+      const recipientInRoom = this.chatGateway.isUserInRoom(recipientId, dto.chatRoomId);
+      if (!recipientInRoom) {
+        await this.notificationsService.upsertDiscussionNotification({
+          recipientId,
+          senderId: dto.senderId,
+          projectId: chatRoom.project.id,
+        });
+      }
     }
 
     return message;
