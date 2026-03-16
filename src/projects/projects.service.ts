@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProjectDto } from './update-project.dto';
+import { UpdateProjectBriefDto } from './update-project-brief.dto';
 
 const clientUserSelect = {
   select: {
@@ -36,6 +37,19 @@ const projectPublicSelect = {
   submissionType: true,
   status: true,
   createdAt: true,
+  // Brief fields
+  targetAudience: true,
+  projectStage: true,
+  aiInvolvement: true,
+  currentFrustrations: true,
+  triedSolutions: true,
+  desiredFeatures: true,
+  successMetrics: true,
+  kpis: true,
+  technicalConstraints: true,
+  stakeholders: true,
+  dependencies: true,
+  regulatoryRequirements: true,
   clientUser: clientUserSelect,
 };
 
@@ -168,6 +182,41 @@ export class ProjectsService {
     return this.prisma.project.update({
       where: { id },
       data: { status },
+    });
+  }
+
+  // Participant가 brief 필드를 업데이트 (applicant로 승인된 유저만)
+  async updateBrief(
+    projectId: string,
+    userId: string,
+    dto: UpdateProjectBriefDto,
+  ) {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
+    if (!project) throw new NotFoundException('Project not found.');
+
+    // 해당 프로젝트에 지원한 participant인지 확인
+    const application = await this.prisma.projectApplication.findFirst({
+      where: { projectId, userId },
+    });
+    if (!application)
+      throw new ForbiddenException(
+        'You are not an approved participant for this project.',
+      );
+
+    const data: Record<string, any> = {};
+    for (const [key, value] of Object.entries(dto)) {
+      if (value !== undefined) {
+        data[key] =
+          key === 'projectDeadline' ? new Date(value as string) : value;
+      }
+    }
+
+    return this.prisma.project.update({
+      where: { id: projectId },
+      data,
+      select: projectPublicSelect,
     });
   }
 

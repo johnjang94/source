@@ -11,6 +11,7 @@ import { ProjectsService } from './projects.service';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 import { AuthUser } from '../auth/auth-user.decorator';
 import { UpdateProjectDto } from './update-project.dto';
+import { UpdateProjectBriefDto } from './update-project-brief.dto';
 
 @Controller('projects')
 export class ProjectsController {
@@ -50,6 +51,17 @@ export class ProjectsController {
   async findMine(@AuthUser() user: { id: string }) {
     const items = await this.service.findMine(user.id);
     return { ok: true, items };
+  }
+
+  @UseGuards(SupabaseAuthGuard)
+  @Patch(':id/brief')
+  async updateBrief(
+    @Param('id') id: string,
+    @Body() dto: UpdateProjectBriefDto,
+    @AuthUser() user: { id: string },
+  ) {
+    const item = await this.service.updateBrief(id, user.id, dto);
+    return { ok: true, item };
   }
 
   @UseGuards(SupabaseAuthGuard)

@@ -60,8 +60,23 @@ model ProjectIntake {
   submissionType     String   @default("guided")
   position           String?  @default("Project Coordinator")
   status             String   @default("submitted")
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+
+  // Brief fields (self-serve 대응)
+  targetAudience          String?
+  projectStage            String?
+  aiInvolvement           String?
+  currentFrustrations     String?
+  triedSolutions          String?
+  desiredFeatures         String?
+  successMetrics          String?
+  kpis                    String?
+  technicalConstraints    String?
+  stakeholders            String?
+  dependencies            String?
+  regulatoryRequirements  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   clientUser User     @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
   project    Project?
@@ -84,8 +99,23 @@ model Project {
   position           String?  @default("Project Coordinator")
   status             String   @default("submitted")
   viewCount          Int      @default(0)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+
+  // Brief fields (self-serve 대응)
+  targetAudience          String?
+  projectStage            String?
+  aiInvolvement           String?
+  currentFrustrations     String?
+  triedSolutions          String?
+  desiredFeatures         String?
+  successMetrics          String?
+  kpis                    String?
+  technicalConstraints    String?
+  stakeholders            String?
+  dependencies            String?
+  regulatoryRequirements  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   intake        ProjectIntake        @relation(fields: [intakeId], references: [id], onDelete: Cascade)
   clientUser    User                 @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
