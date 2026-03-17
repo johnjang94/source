@@ -17,6 +17,7 @@ model User {
   avatarPath String?
   role       String?
   points     Int     @default(0)
+  status     String  @default("online")
 
   company             Company?
   projectIntakes      ProjectIntake[]

@@ -2,6 +2,8 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
+  Param,
   Req,
   UseGuards,
   Body,
@@ -9,10 +11,14 @@ import {
 } from '@nestjs/common';
 import { SupabaseAuthGuard } from './supabase-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsGateway: NotificationsGateway,
+  ) {}
 
   @Get('me')
   @UseGuards(SupabaseAuthGuard)
@@ -108,5 +114,35 @@ export class AuthController {
       });
     }
     return { ok: true };
+  }
+
+  @Patch('status')
+  @UseGuards(SupabaseAuthGuard)
+  async updateStatus(
+    @Req() req: any,
+    @Body() body: { status: string },
+  ) {
+    const { email } = req.user;
+    const validStatuses = ['online', 'busy', 'dnd', 'offline'];
+    const status = validStatuses.includes(body.status) ? body.status : 'online';
+
+    const user = await this.prisma.user.update({
+      where: { email },
+      data: { status },
+    });
+
+    this.notificationsGateway.emitStatusChange(user.id, status);
+
+    return { id: user.id, status: user.status };
+  }
+
+  @Get('status/:userId')
+  @UseGuards(SupabaseAuthGuard)
+  async getUserStatus(@Param('userId') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, status: true },
+    });
+    return user ?? { id: userId, status: 'offline' };
   }
 }

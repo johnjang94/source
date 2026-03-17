@@ -57,34 +57,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.socketToUser.delete(client.id);
   }
 
-  // ── Video Call Invite signaling (routed through chat socket) ──
-
-  @SubscribeMessage('video_call_invite')
-  handleVideoInvite(
-    @MessageBody() data: { chatRoomId: string; callerName: string; callerId: string; projectId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    // Broadcast to everyone in room EXCEPT the sender
-    client.to(data.chatRoomId).emit('video_call_invite', data);
-    console.log(`[Chat] video_call_invite from ${data.callerId} in room ${data.chatRoomId}`);
-  }
-
-  @SubscribeMessage('video_call_accepted')
-  handleVideoAccepted(
-    @MessageBody() data: { chatRoomId: string; acceptorName: string; projectId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    client.to(data.chatRoomId).emit('video_call_accepted', data);
-  }
-
-  @SubscribeMessage('video_call_declined')
-  handleVideoDeclined(
-    @MessageBody() data: { chatRoomId: string; declinorName: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    client.to(data.chatRoomId).emit('video_call_declined', data);
-  }
-
   isUserInRoom(userId: string, chatRoomId: string): boolean {
     return this.userChatPresence.get(userId) === chatRoomId;
   }
