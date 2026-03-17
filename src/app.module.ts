@@ -10,6 +10,7 @@ import { ProjectApplicationsModule } from './project-applications/project-applic
 import { NotificationsModule } from './notifications/notifications.module';
 import { EarlyAccessModule } from './early-access/early-access-module';
 import { ChatModule } from './chat/chat.module';
+import { VideoModule } from './video/video.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ChatModule } from './chat/chat.module';
     NotificationsModule,
     EarlyAccessModule,
     ChatModule,
+    VideoModule,
   ],
   controllers: [HealthController],
 })
