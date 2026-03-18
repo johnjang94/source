@@ -114,4 +114,9 @@ export class VideoGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleLeave(@ConnectedSocket() client: Socket) {
     this.leaveRoom(client);
   }
+
+  isRoomActive(projectId: string): boolean {
+    const room = this.rooms.get(projectId);
+    return !!room && room.size > 0;
+  }
 }

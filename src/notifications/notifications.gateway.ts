@@ -105,6 +105,12 @@ export class NotificationsGateway
           data.projectId,
           'under review',
         );
+        this.server
+          .to(data.callerId)
+          .emit('project_status_changed', { projectId: data.projectId, status: 'under review' });
+        this.server
+          .to(data.targetUserId)
+          .emit('project_status_changed', { projectId: data.projectId, status: 'under review' });
         const notification = await this.prisma.notification.create({
           data: {
             recipientId: project.clientUserId,
