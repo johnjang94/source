@@ -74,12 +74,23 @@ export class ChatService {
     return { rooms, users };
   }
 
+  async updateMessageMetadata(messageId: string, metadata: any) {
+    const message = await this.prisma.message.update({
+      where: { id: messageId },
+      data: { metadata },
+    });
+    this.chatGateway.emitMessageUpdate(message.chatRoomId, message);
+    return message;
+  }
+
   async sendMessage(dto: SendMessageDto) {
     const message = await this.prisma.message.create({
       data: {
         chatRoomId: dto.chatRoomId,
         senderId: dto.senderId,
         content: dto.content,
+        type: dto.type ?? 'text',
+        metadata: dto.metadata ?? undefined,
       },
     });
 

@@ -121,8 +121,9 @@ model Project {
   intake        ProjectIntake        @relation(fields: [intakeId], references: [id], onDelete: Cascade)
   clientUser    User                 @relation(fields: [clientUserId], references: [id], onDelete: Cascade)
   applications  ProjectApplication[]
-  notifications Notification[]
-  chatRooms     ChatRoom[]
+  notifications    Notification[]
+  chatRooms        ChatRoom[]
+  signedAgreements SignedAgreement[]
 
   @@index([clientUserId])
 }
@@ -197,6 +198,8 @@ model Message {
   chatRoomId String
   senderId   String
   content    String
+  type       String   @default("text")
+  metadata   Json?
   createdAt  DateTime @default(now())
 
   chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
@@ -219,4 +222,19 @@ enum ApplicationStatus {
   INTERVIEW
   SELECTED
   REJECTED
+}
+
+model SignedAgreement {
+  id            String   @id @default(cuid())
+  projectId     String
+  userId        String
+  agreementType String
+  signatureData String
+  signedAt      DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId, agreementType])
+  @@index([projectId])
+  @@index([userId])
 }

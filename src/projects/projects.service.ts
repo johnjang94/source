@@ -185,6 +185,15 @@ export class ProjectsService {
     });
   }
 
+  async updateStatusInternal(id: string, status: string) {
+    const existing = await this.prisma.project.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Project not found.');
+    return this.prisma.project.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
   // Participant가 brief 필드를 업데이트 (applicant로 승인된 유저만)
   async updateBrief(
     projectId: string,

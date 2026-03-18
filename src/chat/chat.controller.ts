@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ChatService } from './chat.service';
-import { CreateRoomDto, SendMessageDto } from './chat.dto';
+import { CreateRoomDto, SendMessageDto, UpdateMessageMetadataDto } from './chat.dto';
 
 @Controller('chat')
 export class ChatController {
@@ -24,5 +24,13 @@ export class ChatController {
   @Post('messages')
   sendMessage(@Body() dto: SendMessageDto) {
     return this.chatService.sendMessage(dto);
+  }
+
+  @Patch('messages/:id')
+  updateMessageMetadata(
+    @Param('id') id: string,
+    @Body() dto: UpdateMessageMetadataDto,
+  ) {
+    return this.chatService.updateMessageMetadata(id, dto.metadata);
   }
 }

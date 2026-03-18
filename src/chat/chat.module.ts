@@ -9,5 +9,6 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
   imports: [NotificationsModule],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway, PrismaService],
+  exports: [ChatService, ChatGateway],
 })
 export class ChatModule {}

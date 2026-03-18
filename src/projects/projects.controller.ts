@@ -5,6 +5,7 @@ import {
   UseGuards,
   Patch,
   Delete,
+  Post,
   Body,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
@@ -72,6 +73,16 @@ export class ProjectsController {
     @AuthUser() user: { id: string },
   ) {
     const item = await this.service.updateStatus(id, user.id, body.status);
+    return { ok: true, item };
+  }
+
+  @UseGuards(SupabaseAuthGuard)
+  @Post(':id/start-recruiting')
+  async startRecruiting(
+    @Param('id') id: string,
+    @AuthUser() user: { id: string },
+  ) {
+    const item = await this.service.updateStatus(id, user.id, 'recruiting');
     return { ok: true, item };
   }
 

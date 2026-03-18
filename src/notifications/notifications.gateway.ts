@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { PrismaService } from '../prisma/prisma.service';
+import { ProjectsService } from '../projects/projects.service';
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -20,7 +21,10 @@ export class NotificationsGateway
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly projectsService: ProjectsService,
+  ) {}
 
   handleConnection(client: Socket) {
     console.log(`[Notifications] connected: ${client.id}`);
@@ -88,6 +92,47 @@ export class NotificationsGateway
             : 'User is offline',
       });
       return;
+    }
+
+    // Auto-transition: submitted → under review on first video call
+    try {
+      const project = await this.prisma.project.findUnique({
+        where: { id: data.projectId },
+        select: { status: true, clientUserId: true, projectName: true },
+      });
+      if (project && project.status === 'submitted') {
+        await this.projectsService.updateStatusInternal(
+          data.projectId,
+          'under review',
+        );
+        const notification = await this.prisma.notification.create({
+          data: {
+            recipientId: project.clientUserId,
+            senderId: data.callerId,
+            projectId: data.projectId,
+            type: 'status_change',
+            title: 'Project Under Review',
+            message: `Your project "${project.projectName}" is now under review.`,
+          },
+          include: {
+            project: { select: { id: true, projectName: true } },
+          },
+        });
+        this.server
+          .to(project.clientUserId)
+          .emit('new_notification', {
+            id: notification.id,
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            isRead: notification.isRead,
+            projectId: notification.projectId,
+            projectName: notification.project?.projectName ?? null,
+            createdAt: notification.createdAt,
+          });
+      }
+    } catch (err) {
+      console.error('[Notifications] status transition error:', err);
     }
 
     // Forward invite to target user's room
