@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProjectsService } from '../projects/projects.service';
 import { ChatGateway } from '../chat/chat.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 const AGREEMENT_TYPES = ['nda', 'project', 'deposit', 'privacy'];
 
@@ -11,6 +13,8 @@ export class AgreementsService {
     private readonly prisma: PrismaService,
     private readonly projectsService: ProjectsService,
     private readonly chatGateway: ChatGateway,
+    private readonly notificationsService: NotificationsService,
+    private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
   async sign(userId: string, dto: { projectId: string; agreementType: string; signatureData: string }) {
@@ -34,10 +38,50 @@ export class AgreementsService {
       },
     });
 
-    // Check if all agreements are signed by both parties
+    await this.checkClientComplete(dto.projectId, userId);
     const allSigned = await this.checkAllSigned(dto.projectId);
 
     return { agreement, allSigned };
+  }
+
+  private async checkClientComplete(projectId: string, signingUserId: string): Promise<void> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { clientUserId: true, projectName: true },
+    });
+    if (!project || project.clientUserId !== signingUserId) return;
+
+    const clientAgreements = await this.prisma.signedAgreement.findMany({
+      where: { projectId, userId: signingUserId },
+    });
+    const clientTypes = new Set(clientAgreements.map((a) => a.agreementType));
+    const clientDone = AGREEMENT_TYPES.every((t) => clientTypes.has(t));
+    if (!clientDone) return;
+
+    const chatRoom = await this.prisma.chatRoom.findFirst({
+      where: { projectId },
+    });
+    if (!chatRoom) return;
+
+    const participantAgreements = await this.prisma.signedAgreement.findMany({
+      where: { projectId, userId: chatRoom.applicantId },
+    });
+    const participantTypes = new Set(participantAgreements.map((a) => a.agreementType));
+    const participantDone = AGREEMENT_TYPES.every((t) => participantTypes.has(t));
+    if (participantDone) return;
+
+    try {
+      await this.notificationsService.createAndEmit({
+        recipientId: chatRoom.applicantId,
+        senderId: signingUserId,
+        projectId,
+        type: 'agreement_request',
+        title: 'Agreement Signing Request',
+        message: `The client has signed all agreements for "${project.projectName}". Please review and sign to proceed.`,
+      });
+    } catch (err) {
+      console.error('[Agreements] notify participant error:', err);
+    }
   }
 
   async checkAllSigned(projectId: string): Promise<boolean> {
@@ -45,7 +89,6 @@ export class AgreementsService {
       where: { projectId },
     });
 
-    // Get the two parties: client + applicant
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       select: { clientUserId: true, projectName: true },
@@ -70,7 +113,6 @@ export class AgreementsService {
     });
 
     if (allComplete) {
-      // Update project status to "approved"
       try {
         const currentProject = await this.prisma.project.findUnique({
           where: { id: projectId },
@@ -78,12 +120,18 @@ export class AgreementsService {
         });
         if (currentProject && currentProject.status !== 'approved') {
           await this.projectsService.updateStatusInternal(projectId, 'approved');
+
+          this.notificationsGateway.server
+            .to(project.clientUserId)
+            .emit('project_status_changed', { projectId, status: 'approved' });
+          this.notificationsGateway.server
+            .to(chatRoom.applicantId)
+            .emit('project_status_changed', { projectId, status: 'approved' });
         }
       } catch (err) {
         console.error('[Agreements] status update error:', err);
       }
 
-      // Send agreement summary message to chat
       try {
         const existingSummary = await this.prisma.message.findFirst({
           where: { chatRoomId: chatRoom.id, type: 'agreement_summary' },

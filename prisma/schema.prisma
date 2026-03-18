@@ -26,6 +26,7 @@ model User {
 
   receivedNotifications Notification[] @relation("ReceivedNotifications")
   sentNotifications     Notification[] @relation("SentNotifications")
+  assignedRoles         ProjectRole[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -124,6 +125,7 @@ model Project {
   notifications    Notification[]
   chatRooms        ChatRoom[]
   signedAgreements SignedAgreement[]
+  roles            ProjectRole[]
 
   @@index([clientUserId])
 }
@@ -237,4 +239,22 @@ model SignedAgreement {
   @@unique([projectId, userId, agreementType])
   @@index([projectId])
   @@index([userId])
+}
+
+model ProjectRole {
+  id             String   @id @default(cuid())
+  projectId      String
+  title          String
+  skills         String[]
+  status         String   @default("interviewing")
+  assignedUserId String?
+  candidateCount Int      @default(0)
+
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedUser User?   @relation(fields: [assignedUserId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
 }

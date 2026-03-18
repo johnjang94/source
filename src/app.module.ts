@@ -12,6 +12,7 @@ import { EarlyAccessModule } from './early-access/early-access-module';
 import { ChatModule } from './chat/chat.module';
 import { VideoModule } from './video/video.module';
 import { AgreementsModule } from './agreements/agreements.module';
+import { ProjectRolesModule } from './project-roles/project-roles.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AgreementsModule } from './agreements/agreements.module';
     ChatModule,
     VideoModule,
     AgreementsModule,
+    ProjectRolesModule,
   ],
   controllers: [HealthController],
 })

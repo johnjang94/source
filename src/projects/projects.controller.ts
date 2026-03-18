@@ -97,6 +97,21 @@ export class ProjectsController {
     return { ok: true, item };
   }
 
+  @Get('company/:userId')
+  async getCompany(@Param('userId') userId: string) {
+    const company = await this.service.getCompanyByUserId(userId);
+    return { ok: true, company };
+  }
+
+  @Get(':projectId/resume/:participantId')
+  async getResume(
+    @Param('projectId') projectId: string,
+    @Param('participantId') participantId: string,
+  ) {
+    const resume = await this.service.getResumeForProject(projectId, participantId);
+    return { ok: true, resume };
+  }
+
   @UseGuards(SupabaseAuthGuard)
   @Delete(':id')
   async deleteMine(@Param('id') id: string, @AuthUser() user: { id: string }) {

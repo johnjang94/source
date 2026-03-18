@@ -229,6 +229,38 @@ export class ProjectsService {
     });
   }
 
+  async getCompanyByUserId(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        company: {
+          select: {
+            name: true,
+            industry: true,
+            serviceDescription: true,
+            logoUrl: true,
+          },
+        },
+      },
+    });
+    return user?.company ?? null;
+  }
+
+  async getResumeForProject(projectId: string, participantId: string) {
+    const application = await this.prisma.projectApplication.findFirst({
+      where: { projectId, userId: participantId },
+      include: {
+        form: { select: { resumeR2Key: true, portfolioLink: true } },
+      },
+    });
+    if (!application?.form) return null;
+    const baseUrl = process.env.R2_PUBLIC_BASE_URL?.replace(/\/$/, '') ?? '';
+    return {
+      resumeUrl: `${baseUrl}/${application.form.resumeR2Key}`,
+      portfolioLink: application.form.portfolioLink,
+    };
+  }
+
   async deleteMine(id: string, userId: string) {
     const existing = await this.prisma.project.findUnique({ where: { id } });
 
