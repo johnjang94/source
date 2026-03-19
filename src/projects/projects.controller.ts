@@ -7,16 +7,23 @@ import {
   Delete,
   Post,
   Body,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { SupabaseAuthGuard } from '../auth/supabase-auth.guard';
 import { AuthUser } from '../auth/auth-user.decorator';
 import { UpdateProjectDto } from './update-project.dto';
 import { UpdateProjectBriefDto } from './update-project-brief.dto';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly service: ProjectsService) {}
+  constructor(
+    private readonly service: ProjectsService,
+    @Inject(forwardRef(() => NotificationsGateway))
+    private readonly notificationsGateway: NotificationsGateway,
+  ) {}
 
   @Get('public')
   async findPublic(@AuthUser() user?: { id: string }) {
@@ -73,6 +80,10 @@ export class ProjectsController {
     @AuthUser() user: { id: string },
   ) {
     const item = await this.service.updateStatus(id, user.id, body.status);
+    // Emit real-time status change to the project owner
+    this.notificationsGateway.server
+      .to(user.id)
+      .emit('project_status_changed', { projectId: id, status: body.status });
     return { ok: true, item };
   }
 
@@ -83,6 +94,10 @@ export class ProjectsController {
     @AuthUser() user: { id: string },
   ) {
     const item = await this.service.updateStatus(id, user.id, 'recruiting');
+    // Emit real-time status change to the project owner
+    this.notificationsGateway.server
+      .to(user.id)
+      .emit('project_status_changed', { projectId: id, status: 'recruiting' });
     return { ok: true, item };
   }
 
