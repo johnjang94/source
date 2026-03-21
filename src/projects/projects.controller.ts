@@ -127,6 +127,15 @@ export class ProjectsController {
     return { ok: true, resume };
   }
 
+  @Get(':projectId/resume-experience/:participantId')
+  async getResumeExperience(
+    @Param('projectId') projectId: string,
+    @Param('participantId') participantId: string,
+  ) {
+    const result = await this.service.getResumeExperience(projectId, participantId);
+    return { ok: true, ...result };
+  }
+
   @UseGuards(SupabaseAuthGuard)
   @Delete(':id')
   async deleteMine(@Param('id') id: string, @AuthUser() user: { id: string }) {

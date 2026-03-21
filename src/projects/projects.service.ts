@@ -3,7 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaService } from '../prisma/prisma.service';
+import { R2Service } from '../r2/r2.service';
 import { UpdateProjectDto } from './update-project.dto';
 import { UpdateProjectBriefDto } from './update-project-brief.dto';
 
@@ -55,7 +57,10 @@ const projectPublicSelect = {
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly r2: R2Service,
+  ) {}
 
   async findMine(userId: string) {
     return this.prisma.project.findMany({
@@ -261,6 +266,56 @@ export class ProjectsService {
     };
   }
 
+  async getResumeExperience(
+    projectId: string,
+    participantId: string,
+  ): Promise<{ experience: string | null }> {
+    const application = await this.prisma.projectApplication.findFirst({
+      where: { projectId, userId: participantId },
+      include: { form: { select: { resumeR2Key: true } } },
+    });
+
+    if (!application?.form?.resumeR2Key) return { experience: null };
+
+    const r2Key = application.form.resumeR2Key;
+    const ext = r2Key.split('.').pop()?.toLowerCase();
+    if (ext !== 'pdf' && ext !== 'docx') return { experience: null };
+
+    const command = new GetObjectCommand({
+      Bucket: this.r2.getBucketName(),
+      Key: r2Key,
+    });
+    const response = await this.r2.getClient().send(command);
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
+      chunks.push(Buffer.from(chunk));
+    }
+    const buffer = Buffer.concat(chunks);
+
+    let fullText = '';
+    if (ext === 'pdf') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfParse = require('pdf-parse') as (
+        buf: Buffer,
+      ) => Promise<{ text: string }>;
+      const data = await pdfParse(buffer);
+      fullText = data.text;
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mammoth = require('mammoth') as {
+        extractRawText: (opts: {
+          buffer: Buffer;
+        }) => Promise<{ value: string }>;
+      };
+      const result = await mammoth.extractRawText({ buffer });
+      fullText = result.value;
+    }
+
+    const experience = extractExperienceSection(fullText);
+    return { experience };
+  }
+
   async deleteMine(id: string, userId: string) {
     const existing = await this.prisma.project.findUnique({ where: { id } });
 
@@ -270,4 +325,34 @@ export class ProjectsService {
 
     return this.prisma.project.delete({ where: { id } });
   }
+}
+
+function extractExperienceSection(text: string): string | null {
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const experienceHeader =
+    /^(work\s+)?experience|employment(\s+history)?|professional\s+experience|work\s+history|career(\s+history)?$/i;
+  const nextSectionHeader =
+    /^(education|skills|summary|objective|certifications?|projects?|references?|languages?|awards?|publications?|volunteer|interests?|hobbies|training|courses?)$/i;
+
+  let inExperience = false;
+  const collected: string[] = [];
+
+  for (const line of lines) {
+    if (!inExperience && experienceHeader.test(line)) {
+      inExperience = true;
+      continue;
+    }
+    if (inExperience) {
+      if (nextSectionHeader.test(line)) break;
+      collected.push(line);
+      if (collected.length >= 25) break;
+    }
+  }
+
+  if (collected.length === 0) return null;
+  return collected.join('\n');
 }
